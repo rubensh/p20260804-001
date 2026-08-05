@@ -26,3 +26,10 @@ Nombre: feature-0002
 Descripción: Implementación de clase "launcher" que sirva como punto de entrada al juego, y que arranque el servidor desde terminal.
 Etiquetas: [backend][java]
 ````
+
+````text
+Feature ID: 0003
+Nombre: feature-0003
+Descripción: Creación de una página web mockup que sirva para probar el acceso a recursos del servidor vía navegador web.
+Etiquetas: [frontend][html][css][js]
+````
