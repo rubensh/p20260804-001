@@ -13,4 +13,9 @@ Cada *feature* dispone de su propia carpeta `./features/XXXX/` que contiene, com
 
 ## Registro de features
 
-
+````text
+Feature ID: 0001
+Nombre: feature-0001
+Descripción: Implementación de servidor HTTP sencillo.
+Etiquetas: [backend][java]
+````
