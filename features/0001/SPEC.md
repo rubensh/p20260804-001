@@ -9,7 +9,8 @@ Implementar un servidor HTTP ligero y sencillo.
 # Estado
 
 - [X]En proceso.
-- [ ]En pruebas.
+- [X]En pruebas.
+- [X]Finalizado.
 
 
 # Notas
