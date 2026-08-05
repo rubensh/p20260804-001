@@ -3,96 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Buried Dark World: un roguelike de mazmorras para navegador. Encuentra la salida del laberinto mientras sobrevives a sus enemigos.">
-    <meta name="theme-color" content="#0b0e14">
+    <meta name="description" content="Buried Dark World: entra al laberinto y encuentra la salida.">
+    <meta name="theme-color" content="#000000">
     <title>Buried Dark World</title>
-    <link rel="stylesheet" href="../styles/landing.css">
+    <link rel="stylesheet" href="../styles/styles.css">
 </head>
 <body>
-    <a class="skip-link" href="#main">Saltar al contenido principal</a>
-
     <header class="site-header">
+        <a class="brand" href="landing.html">Buried Dark World</a>
         <nav class="nav" aria-label="Navegación principal">
-            <a class="nav-brand" href="#inicio" aria-label="Buried Dark World, inicio">
-                <span class="nav-brand-mark" aria-hidden="true">&#x1F512;</span>
-                Buried Dark World
-            </a>
-            <ul class="nav-links">
-                <li><a href="#inicio">Inicio</a></li>
-                <li><a href="#caracteristicas">Características</a></li>
-                <li><a href="#como-jugar">Cómo jugar</a></li>
-            </ul>
+            <a href="landing.html">Inicio</a>
         </nav>
     </header>
 
-    <main id="main">
-        <section id="inicio" class="hero">
-            <p class="hero-eyebrow">Un roguelike de mazmorras en tu navegador</p>
-            <h1>Buried Dark World</h1>
-            <p class="hero-text">
-                Adéntrate en un laberinto oscuro y cambiante. Cada partida genera un mundo
-                nuevo, cada esquina esconde un peligro y solo una salida te devolverá a la luz.
-            </p>
-            <a class="btn btn-primary" href="#como-jugar">Jugar ahora</a>
-            <a class="btn btn-ghost" href="#caracteristicas">Conocer más</a>
-        </section>
-
-        <section id="caracteristicas" class="features">
-            <div class="section-heading">
-                <h2>Características</h2>
-                <p>Todo lo que necesitas para horas de exploración bajo tierra.</p>
-            </div>
-            <div class="features-grid">
-                <article class="card">
-                    <span class="card-icon" aria-hidden="true">&#x1F3E0;</span>
-                    <h3>Niveles procedurales</h3>
-                    <p>Cada partida es distinta: los niveles se generan al azar para que la exploración nunca se repita.</p>
-                </article>
-                <article class="card">
-                    <span class="card-icon" aria-hidden="true">&#x1F9ED;</span>
-                    <h3>Enemigos variados</h3>
-                    <p>Diferentes tipos de criaturas con dificultades propias pondrán a prueba tu estrategia.</p>
-                </article>
-                <article class="card">
-                    <span class="card-icon" aria-hidden="true">&#x1F5E1;&#xFE0E;</span>
-                    <h3>Botín y equipamiento</h3>
-                    <p>Armas, armaduras y consumibles para forjar tu camino hacia la salida.</p>
-                </article>
-                <article class="card">
-                    <span class="card-icon" aria-hidden="true">&#x1F3AE;</span>
-                    <h3>Falso 3D en primera persona</h3>
-                    <p>Una experiencia inmersiva con movimiento por casillas, directamente en el navegador.</p>
-                </article>
-            </div>
-        </section>
-
-        <section id="como-jugar" class="how-to">
-            <div class="section-heading">
-                <h2>Cómo jugar</h2>
-                <p>Muévete, gira y sobrevive.</p>
-            </div>
-            <ol class="how-to-steps">
-                <li>
-                    <span class="step-number" aria-hidden="true">1</span>
-                    <h3>Explora el laberinto</h3>
-                    <p>Avanzas de casilla en casilla y giras sobre tu posición para orientarte.</p>
-                </li>
-                <li>
-                    <span class="step-number" aria-hidden="true">2</span>
-                    <h3>Encuentra tesoros</h3>
-                    <p>Recoge armas, armaduras y consumibles que te ayuden a sobrevivir.</p>
-                </li>
-                <li>
-                    <span class="step-number" aria-hidden="true">3</span>
-                    <h3>Escapa a la luz</h3>
-                    <p>Esquiva a los enemigos y encuentra la salida antes de que el mundo te entierre.</p>
-                </li>
-            </ol>
-        </section>
+    <main class="game-main">
+        <h1 class="sr-only">Buried Dark World</h1>
+        <p class="game-subtitle">Encuentra la salida del laberinto.</p>
+        <div id="game" class="game-container" aria-label="Zona de juego Buried Dark World"></div>
+        <noscript>
+            <p class="noscript">Este juego requiere JavaScript. Actívalo para poder jugar.</p>
+        </noscript>
     </main>
 
     <footer class="site-footer">
         <p>&copy; 2026 Buried Dark World. Un roguelike de mazmorras para navegador.</p>
     </footer>
+
+    <script src="../js/phaser.min.js"></script>
+    <script src="../js/index.js"></script>
 </body>
 </html>

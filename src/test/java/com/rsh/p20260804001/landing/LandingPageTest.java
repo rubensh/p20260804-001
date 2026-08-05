@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * </h1>
  *
  * <div>
- * Verifica la existencia y el contenido de {@code webcontent/pages/index.html} y de la hoja de
+ * Verifica la existencia y el contenido de {@code webcontent/pages/landing.html} y de la hoja de
  * estilos {@code webcontent/styles/landing.css}, así como su servicio a través del
  * {@link GameServer}.
  * </div>
@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class LandingPageTest
 {
     /** Ruta del fichero HTML de la landing page. */
-    private static final Path INDEX_HTML = Path.of("webcontent/pages/index.html");
+    private static final Path LANDING_HTML = Path.of("webcontent/pages/landing.html");
 
     /** Ruta de la hoja de estilos de la landing page. */
     private static final Path LANDING_CSS = Path.of("webcontent/styles/landing.css");
@@ -125,7 +125,7 @@ class LandingPageTest
     @Test
     void landingResourcesExist()
     {
-        assertTrue(Files.isRegularFile(INDEX_HTML), "No existe webcontent/pages/index.html");
+        assertTrue(Files.isRegularFile(LANDING_HTML), "No existe webcontent/pages/landing.html");
         assertTrue(Files.isRegularFile(LANDING_CSS), "No existe webcontent/styles/landing.css");
     }
 
@@ -150,7 +150,7 @@ class LandingPageTest
     @Test
     void indexReferencesLandingCss() throws IOException
     {
-        String html = Files.readString(INDEX_HTML);
+        String html = Files.readString(LANDING_HTML);
 
         assertTrue(html.contains("../styles/landing.css"), "El HTML no referencia a landing.css");
     }
@@ -176,7 +176,7 @@ class LandingPageTest
     @Test
     void indexIncludesAccessibilityEssentials() throws IOException
     {
-        String html = Files.readString(INDEX_HTML);
+        String html = Files.readString(LANDING_HTML);
 
         assertTrue(html.contains("lang=\"es\""), "Falta el atributo lang");
         assertTrue(html.contains("name=\"viewport\""), "Falta la meta viewport");
@@ -211,7 +211,7 @@ class LandingPageTest
     @Test
     void landingPageIsServedAsHtml() throws IOException, InterruptedException
     {
-        HttpResponse<String> response = sendGet("/pages/index.html");
+        HttpResponse<String> response = sendGet("/pages/landing.html");
 
         assertEquals(200, response.statusCode());
         assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("text/html"));

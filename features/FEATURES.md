@@ -33,3 +33,10 @@ Nombre: feature-0003
 Descripción: Creación de una página web mockup que sirva para probar el acceso a recursos del servidor vía navegador web.
 Etiquetas: [frontend][html][css][js]
 ````
+
+````text
+Feature ID: 0004
+Nombre: feature-0004
+Descripción: Creación de la página web principal, donde se mostrará la vista del juego.
+Etiquetas: [frontend][html][css][js][phaser 3]
+````
