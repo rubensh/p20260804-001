@@ -28,7 +28,7 @@ Los agentes únicamente se centrarán en implementar la última especificación 
 - Git 2.x.
 - Librería Phaser-3.x.js.
 - Navegador web moderno (Firefox, Chrome, Edge, Opera, Brave).
-- WSL + OpenCode.
+- OpenCode.
 - Eclipse IDE 2025-12+.
 
 
@@ -41,3 +41,11 @@ Los agentes únicamente se centrarán en implementar la última especificación 
 - Sigue los patrones establecidos por Maven:
   - Dentro de la carpeta raíz, crea: src/main/java, src/main/resources, src/test/java y src/test/resources, que serán carpetas fuente (source folders) de Eclipse.
   - También a partir de la carpeta raíz, crea las carpetas webcontent/assets, webcontent/pages, webcontent/styles, webcontent/js y Docs/.
+
+
+# Reglas
+
+- No te extralimites en tus respuestas o soluciones.
+- No modifiques nada que no tenga que ver con la feature que estás tratando.
+- Si no queda más remedio que modificar algo que está relacionado con la feature, siempre informa primero y luego pide consentimiento.
+- Al crear directorios nuevos, no incluyas ficheros vacíos tipo ".gitkeep".
