@@ -19,3 +19,10 @@ Nombre: feature-0001
 Descripción: Implementación de servidor HTTP sencillo.
 Etiquetas: [backend][java]
 ````
+
+````text
+Feature ID: 0002
+Nombre: feature-0002
+Descripción: Implementación de clase "launcher" que sirva como punto de entrada al juego, y que arranque el servidor desde terminal.
+Etiquetas: [backend][java]
+````
