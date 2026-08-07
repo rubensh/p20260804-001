@@ -9,8 +9,8 @@ Desarrollo de la escena de arranque del juego. Esta escena tiene como finalidad 
 # Estado
 
 - [X]En proceso.
-- [ ]En pruebas.
-- [ ]Finalizado.
+- [X]En pruebas.
+- [X]Finalizado.
 
 
 # Notas
