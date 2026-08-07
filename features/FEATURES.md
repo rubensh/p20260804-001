@@ -40,3 +40,12 @@ Nombre: feature-0004
 Descripción: Creación de la página web principal, donde se mostrará la vista del juego.
 Etiquetas: [frontend][html][css][js][phaser 3]
 ````
+
+````text
+Feature ID: 0005
+Nombre: feature-0005
+Descripción: Desarrollo de escena de arranque (bootloader).
+Etiquetas: [phaser 3][assets][images]
+````
+
+
