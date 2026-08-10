@@ -48,4 +48,11 @@ Descripción: Desarrollo de escena de arranque (bootloader).
 Etiquetas: [phaser 3][assets][images]
 ````
 
+````text
+Feature ID: 0006
+Nombre: feature-0006
+Descripción: Desarrollo de elementos de UI
+Etiquetas: [phaser 3][ui][ui-element][ui-button][ui-panel]
+````
+
 

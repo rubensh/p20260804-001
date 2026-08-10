@@ -7,6 +7,7 @@ const game = new Phaser.Game({
     height: 600,
     backgroundColor: '#000000',
     scene: [
-        BootloaderScene
+        BootloaderScene,
+        UITextScene
     ]
 });
