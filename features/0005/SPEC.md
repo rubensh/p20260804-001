@@ -35,6 +35,6 @@ Desarrollo de la escena de arranque del juego. Esta escena tiene como finalidad 
 - Los assets se declarán en un array dentro de la escena.
 - Dichos assets deben estar disponibles para otras escenas.
 - Inicialmente cargaremos el asset correspondiente a la splash screen: "webcontent/assets/images/SplashScreenLogo.png"
-- Una vez cargados lo assets pase mostrará el asset correspondiente a la splash screen, con un efecto de fade in de duración 2.5 segundos.
+- Una vez cargados lo assets se mostrará el asset correspondiente a la splash screen, con un efecto de fade in de duración 2.5 segundos.
 - La splash screen segurirá mostrándose durante 5 segundos, o hasta que hagamos click en la pantalla, tras lo cual se realizará un fade out de 2.5 segundos.
 - Prepara la escena para declarar en una variable, qué escena debe ser mostrada tras el fade out anterior.
