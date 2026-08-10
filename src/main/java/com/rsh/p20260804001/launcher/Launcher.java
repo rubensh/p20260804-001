@@ -110,7 +110,21 @@ public class Launcher
      */
     public static void main(String[] args)
     {
-        new Launcher().run();
+        if (args == null || args.length == 0)
+        {
+            new Launcher().run();
+        }
+        else
+        {
+            try
+            {
+                new Launcher(Integer.parseInt(args[0])).run();
+            }
+            catch (Exception exception)
+            {
+                new Launcher().run();
+            }
+        }
     }
 
     /**
