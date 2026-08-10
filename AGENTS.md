@@ -49,3 +49,4 @@ Los agentes únicamente se centrarán en implementar la última especificación 
 - No modifiques nada que no tenga que ver con la feature que estás tratando.
 - Si no queda más remedio que modificar algo que está relacionado con la feature, siempre informa primero y luego pide consentimiento.
 - Al crear directorios nuevos, no incluyas ficheros vacíos tipo ".gitkeep".
+- En código, no uses "magic numbers" ni valores "hard-coded". Siempre declara las variables y constantes necesarias para usar dichos valores.

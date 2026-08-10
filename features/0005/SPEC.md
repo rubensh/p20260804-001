@@ -26,7 +26,7 @@ Desarrollo de la escena de arranque del juego. Esta escena tiene como finalidad 
 # Implementación
 
 - Crea la escena de Phaser "webcontent/js/scene/BootloaderScene.js" y añádela como primera escena al array de escenas de la configuración del juego en "webcontent/js/index.js". Elimina toda configuración de escenas anteriores.
-- La escena es muy minimalista. Fondo negro, con texto y gráficos blancos.
+- La escena es extremadamente minimalista. Fondo negro, con texto y gráficos blancos.
 - Mostrará en el centro de la pantalla un texto de cabecera, con fuente Monospace de 12px, el texto "Cargando..."
 - Bajo el texto se mostrará una bara de progreso, balanca también, con las siguientes características:
   - Borde: rectángulo hueco de 200px x 7px con espaciado interno de 1px.
