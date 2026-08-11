@@ -32,7 +32,7 @@ Esta escena define el menú principal de la aplicación. Las opciones de menú d
 
 # Implementación
 
-- BootSceneLoader, en lugar de dar paso a UITestScene, da paso a MainMenuScene.
+- BootloaderScene, en lugar de dar paso a UITestScene, da paso a MainMenuScene.
 - El menú se compone de la siguiente forma:
 - Un UIPanel:
   - Id: MenuPanel001
