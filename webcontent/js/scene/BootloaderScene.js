@@ -9,7 +9,7 @@ class BootloaderScene extends Phaser.Scene {
             { key: 'SplashScreenLogo', file: '/assets/images/SplashScreenLogo.png' }
         ];
 
-        this.nextScene = 'UITextScene';
+        this.nextScene = 'MainMenuScene';
         this.transitioning = false;
     }
 

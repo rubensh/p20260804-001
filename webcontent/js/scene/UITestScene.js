@@ -5,10 +5,10 @@ const UI_TEXT_PANEL_HEIGHT = 400;
 const UI_TEXT_DISABLED_MILLIS = 2500;
 const UI_TEXT_HIDDEN_MILLIS = 2500;
 
-class UITextScene extends Phaser.Scene {
+class UITestScene extends Phaser.Scene {
 
     constructor() {
-        super('UITextScene');
+        super('UITestScene');
     }
 
     create() {
@@ -50,8 +50,30 @@ class UITextScene extends Phaser.Scene {
             }
         });
 
+        const backButton = new UIButton(this, {
+            id: 'testButtonBack',
+            x: 10,
+            y: 256,
+            width: 280,
+            height: 32,
+            backgroundColor: 'rgba(0.6, 0.6, 0.6, 1.0)',
+            borderColor: 'rgba(0.75, 0.75, 0.75, 1.0)',
+            textColor: 'rgba(0.0, 0.0, 0.0, 1.0)',
+            text: 'Volver al menú principal',
+            textSize: 18,
+            fontName: 'Monospace',
+            enabled: true,
+            visible: true,
+            onClickFunction: () => {
+                this.scene.start('MainMenuScene');
+            }
+        });
+
         this.testPanel.addElement(testButton);
         this.testButton = testButton;
+
+        this.testPanel.addElement(backButton);
+        this.backButton = backButton;
     }
 
     runPanelAnimation() {

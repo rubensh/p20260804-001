@@ -200,6 +200,8 @@ class UIButton extends UIElement {
             return;
         }
 
-        this.onClickFunction();
+        if (this.onClickFunction) {
+            this.onClickFunction();
+        }
     }
 }

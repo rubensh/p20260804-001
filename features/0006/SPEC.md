@@ -73,7 +73,7 @@ Desarrollo de elementos de UI:
   - enabled indicará si el panel está activo, o inactivo. En caso de inactividad se mostrarán en escala de grises este elemento y sus elementos contenidos, y no tendrán eventos asociados (resaltado, clic, ...).
   - visible hace que el panel, y sus elementos contenidos, se muestren en la escena si está a true, si no, no se tendrán en cuenta en el renderizado.
 - Crea una escena para probar los controles de UI:
-  - La ubicación será "webcontent/js/scene/UITextScene.js". Añádelo a la carga en "webcontent/pages/index.html".
+  - La ubicación será "webcontent/js/scene/UITestScene.js". Añádelo a la carga en "webcontent/pages/index.html".
   - Incluye la clase en el array de escenas de "webcontent/js/index.js", tras BootloaderScene.
   - La escena va a incluir un panel centrado en la pantalla (en vertical y horizontal).
     - Id: testPanel001.

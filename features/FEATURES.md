@@ -55,4 +55,9 @@ Descripción: Desarrollo de elementos de UI
 Etiquetas: [phaser 3][ui][ui-element][ui-button][ui-panel]
 ````
 
-
+````text
+Feature ID: 0007
+Nombre: feature-0007
+Descripción: Creación de una escena para mostrar el menú principal y los créditos.
+Etiquetas: [phaser 3]
+````

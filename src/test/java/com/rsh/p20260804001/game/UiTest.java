@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <div>
  * Verifica la existencia y el contenido de {@code webcontent/js/ui/UIElement.js},
  * {@code webcontent/js/ui/UIButton.js} y {@code webcontent/js/ui/UIPanel.js}, la escena de prueba
- * {@code webcontent/js/scene/UITextScene.js}, su integración en la configuración del juego y el
+ * {@code webcontent/js/scene/UITestScene.js}, su integración en la configuración del juego y el
  * servicio de los recursos a través del {@link GameServer}.
  * </div>
  *
@@ -51,7 +51,7 @@ class UiTest
     private static final Path UI_PANEL_JS = Path.of("webcontent/js/ui/UIPanel.js");
 
     /** Ruta del fichero de la escena de prueba de UI. */
-    private static final Path UI_TEXT_SCENE_JS = Path.of("webcontent/js/scene/UITextScene.js");
+    private static final Path UI_TEST_SCENE_JS = Path.of("webcontent/js/scene/UITestScene.js");
 
     /** Ruta del fichero de la escena de arranque. */
     private static final Path BOOTLOADER_JS = Path.of("webcontent/js/scene/BootloaderScene.js");
@@ -145,7 +145,7 @@ class UiTest
         assertTrue(Files.isRegularFile(UI_ELEMENT_JS), "No existe webcontent/js/ui/UIElement.js");
         assertTrue(Files.isRegularFile(UI_BUTTON_JS), "No existe webcontent/js/ui/UIButton.js");
         assertTrue(Files.isRegularFile(UI_PANEL_JS), "No existe webcontent/js/ui/UIPanel.js");
-        assertTrue(Files.isRegularFile(UI_TEXT_SCENE_JS), "No existe webcontent/js/scene/UITextScene.js");
+        assertTrue(Files.isRegularFile(UI_TEST_SCENE_JS), "No existe webcontent/js/scene/UITestScene.js");
     }
 
     /**
@@ -368,13 +368,14 @@ class UiTest
      *  0.0.1
      */
     @Test
-    void uiTextSceneDeclaresTestUi() throws IOException
+    void uiTestSceneDeclaresTestUi() throws IOException
     {
-        String scene = Files.readString(UI_TEXT_SCENE_JS);
+        String scene = Files.readString(UI_TEST_SCENE_JS);
 
         assertTrue(scene.contains("extends Phaser.Scene"), "La escena no extiende Phaser.Scene");
         assertTrue(scene.contains("testPanel001"), "Falta el panel de prueba testPanel001");
         assertTrue(scene.contains("testButton001"), "Falta el botón de prueba testButton001");
+        assertTrue(scene.contains("addElement(testButton)"), "El botón de prueba no está dentro de su panel");
         assertTrue(scene.contains("rgba(0.5, 0.5, 0.5, 1.0)"), "Falta el color del panel de prueba");
         assertTrue(scene.contains("rgba(0.75, 0.50, 0.25, 1.0)"), "Falta el color del botón de prueba");
         assertTrue(scene.contains("Monospace"), "El botón no usa fuente Monospace");
@@ -384,7 +385,7 @@ class UiTest
 
     /**
      * <h2>
-     * La escena de arranque apunta a la escena de prueba de UI.
+     * La escena de prueba declara el botón de vuelta al menú principal.
      * </h2>
      *
      * @throws IOException
@@ -401,12 +402,13 @@ class UiTest
      *  0.0.1
      */
     @Test
-    void bootloaderTargetsUiTextScene() throws IOException
+    void uiTestSceneHasBackButton() throws IOException
     {
-        String scene = Files.readString(BOOTLOADER_JS);
+        String scene = Files.readString(UI_TEST_SCENE_JS);
 
-        assertTrue(scene.contains("nextScene"), "Falta la variable de la siguiente escena");
-        assertTrue(scene.contains("'UITextScene'"), "La escena de arranque no apunta a UITextScene");
+        assertTrue(scene.contains("testButtonBack"), "Falta el botón de vuelta testButtonBack");
+        assertTrue(scene.contains("Volver al menú principal"), "Falta el texto del botón de vuelta");
+        assertTrue(scene.contains("scene.start('MainMenuScene')"), "El botón de vuelta no da paso a MainMenuScene");
     }
 
     /**
@@ -428,13 +430,13 @@ class UiTest
      *  0.0.1
      */
     @Test
-    void indexJsRegistersUiTextSceneAfterBootloader() throws IOException
+    void indexJsRegistersUiTestSceneAfterBootloader() throws IOException
     {
         String js = Files.readString(INDEX_JS);
 
         assertTrue(js.contains("BootloaderScene"), "La escena de arranque no está en la configuración");
-        assertTrue(js.contains("UITextScene"), "La escena de prueba de UI no está en la configuración");
-        assertTrue(js.indexOf("UITextScene") > js.indexOf("BootloaderScene"),
+        assertTrue(js.contains("UITestScene"), "La escena de prueba de UI no está en la configuración");
+        assertTrue(js.indexOf("UITestScene") > js.indexOf("BootloaderScene"),
                 "La escena de prueba de UI no está tras la de arranque");
     }
 
@@ -464,18 +466,18 @@ class UiTest
         int uiElementIndex = html.indexOf("../js/ui/UIElement.js");
         int uiButtonIndex = html.indexOf("../js/ui/UIButton.js");
         int uiPanelIndex = html.indexOf("../js/ui/UIPanel.js");
-        int sceneIndex = html.indexOf("../js/scene/UITextScene.js");
+        int sceneIndex = html.indexOf("../js/scene/UITestScene.js");
         int indexJsIndex = html.indexOf("../js/index.js");
 
         assertTrue(uiElementIndex >= 0, "El HTML no carga UIElement.js");
         assertTrue(uiButtonIndex >= 0, "El HTML no carga UIButton.js");
         assertTrue(uiPanelIndex >= 0, "El HTML no carga UIPanel.js");
-        assertTrue(sceneIndex >= 0, "El HTML no carga UITextScene.js");
+        assertTrue(sceneIndex >= 0, "El HTML no carga UITestScene.js");
         assertTrue(indexJsIndex >= 0, "El HTML no carga el script principal");
         assertTrue(uiElementIndex < indexJsIndex, "UIElement.js debe cargarse antes que index.js");
         assertTrue(uiButtonIndex < indexJsIndex, "UIButton.js debe cargarse antes que index.js");
         assertTrue(uiPanelIndex < indexJsIndex, "UIPanel.js debe cargarse antes que index.js");
-        assertTrue(sceneIndex < indexJsIndex, "UITextScene.js debe cargarse antes que index.js");
+        assertTrue(sceneIndex < indexJsIndex, "UITestScene.js debe cargarse antes que index.js");
     }
 
     /**
@@ -517,10 +519,10 @@ class UiTest
         assertTrue(uiPanel.headers().firstValue("Content-Type").orElse("").startsWith("application/javascript"));
         assertTrue(uiPanel.body().contains("class UIPanel"));
 
-        HttpResponse<String> scene = sendGet("/js/scene/UITextScene.js");
+        HttpResponse<String> scene = sendGet("/js/scene/UITestScene.js");
         assertEquals(200, scene.statusCode());
         assertTrue(scene.headers().firstValue("Content-Type").orElse("").startsWith("application/javascript"));
-        assertTrue(scene.body().contains("class UITextScene"));
+        assertTrue(scene.body().contains("class UITestScene"));
     }
 
     /**
