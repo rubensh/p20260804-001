@@ -61,3 +61,10 @@ Nombre: feature-0007
 Descripción: Creación de una escena para mostrar el menú principal y los créditos.
 Etiquetas: [phaser 3]
 ````
+
+````text
+Feature ID: 0008
+Nombre: feature-0008
+Descripción: Implementación de entidades: jugador.
+Etiquetas: [phaser 3][entities]
+````
