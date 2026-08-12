@@ -65,6 +65,13 @@ Etiquetas: [phaser 3]
 ````text
 Feature ID: 0008
 Nombre: feature-0008
-Descripción: Implementación de entidades: jugador.
+Descripción: Implementación de mapa.
+Etiquetas: [phaser 3][entities]
+````
+
+````text
+Feature ID: 0009
+Nombre: feature-0009
+Descripción: Implementación de entidades: entidad base, jugador, enemigo.
 Etiquetas: [phaser 3][entities]
 ````
