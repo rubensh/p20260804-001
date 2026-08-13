@@ -70,7 +70,11 @@ class MainMenuScene extends Phaser.Scene {
             y: 10,
             backgroundColor: 'rgba(0.6, 0.6, 0.6, 1.0)',
             borderColor: 'rgba(0.75, 0.75, 0.75, 1.0)',
-            text: 'Nuevo juego'
+            text: 'Nuevo juego',
+            onClickFunction: () => {
+                this.menuPanel.setVisible(false);
+                this.scene.start('GameScene');
+            }
         });
         this.menuPanel.addElement(newGameButton);
 

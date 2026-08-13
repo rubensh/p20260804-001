@@ -73,9 +73,9 @@ class Player extends Entity {
         } else if (this.facing === 'S') {
             target.y++;
         } else if (this.facing === 'E') {
-            target.x--;
-        } else if (this.facing === 'W') {
             target.x++;
+        } else if (this.facing === 'W') {
+            target.x--;
         }
         return target;
     }
@@ -87,9 +87,9 @@ class Player extends Entity {
         } else if (this.facing === 'S') {
             target.y--;
         } else if (this.facing === 'E') {
-            target.x++;
-        } else if (this.facing === 'W') {
             target.x--;
+        } else if (this.facing === 'W') {
+            target.x++;
         }
         return target;
     }

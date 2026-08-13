@@ -202,6 +202,41 @@ class MainMenuSceneTest
 
     /**
      * <h2>
+     * El botón de nuevo juego oculta el menú y da paso a GameScene.
+     * </h2>
+     *
+     * @throws IOException
+     *  Un {@link IOException} si falla la lectura del fichero.
+     *
+     * @author
+     *  Rubén Santana Hernández
+     *  rubensh1980@gmail.com
+     *
+     * @since
+     *  p20260804-001:0.0.1
+     *
+     * @version
+     *  0.0.1
+     */
+    @Test
+    void mainMenuNewGameButtonStartsGameScene() throws IOException
+    {
+        String scene = Files.readString(MAIN_MENU_JS);
+        int newGameStart = scene.indexOf("id: 'MenuButtonNewGame'");
+        int nextButtonStart = scene.indexOf("id: 'MenuButtonTestUI'");
+
+        assertTrue(newGameStart >= 0, "Falta el botón de nuevo juego");
+        assertTrue(nextButtonStart > newGameStart, "No se puede delimitar el botón de nuevo juego");
+
+        String newGameButton = scene.substring(newGameStart, nextButtonStart);
+        assertTrue(newGameButton.contains("menuPanel.setVisible(false)"),
+                "El botón de nuevo juego no oculta el panel del menú");
+        assertTrue(newGameButton.contains("scene.start('GameScene')"),
+                "El botón de nuevo juego no da paso a GameScene");
+    }
+
+    /**
+     * <h2>
      * El botón de prueba de UI da paso a la escena UITestScene.
      * </h2>
      *

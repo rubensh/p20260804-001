@@ -9,6 +9,7 @@ const game = new Phaser.Game({
     scene: [
         BootloaderScene,
         MainMenuScene,
+        GameScene,
         UITestScene
     ]
 });

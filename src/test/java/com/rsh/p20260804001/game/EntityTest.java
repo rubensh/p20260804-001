@@ -385,8 +385,8 @@ class EntityTest
 
         assertOrdered(forward, "this.facing === 'N'", "target.y--;");
         assertOrdered(forward, "this.facing === 'S'", "target.y++;");
-        assertOrdered(forward, "this.facing === 'E'", "target.x--;");
-        assertOrdered(forward, "this.facing === 'W'", "target.x++;");
+        assertOrdered(forward, "this.facing === 'E'", "target.x++;");
+        assertOrdered(forward, "this.facing === 'W'", "target.x--;");
     }
 
     /**
@@ -415,8 +415,8 @@ class EntityTest
 
         assertOrdered(backward, "this.facing === 'N'", "target.y++;");
         assertOrdered(backward, "this.facing === 'S'", "target.y--;");
-        assertOrdered(backward, "this.facing === 'E'", "target.x++;");
-        assertOrdered(backward, "this.facing === 'W'", "target.x--;");
+        assertOrdered(backward, "this.facing === 'E'", "target.x--;");
+        assertOrdered(backward, "this.facing === 'W'", "target.x++;");
     }
 
     /**

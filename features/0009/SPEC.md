@@ -12,8 +12,8 @@ Implementación de entidades:
 # Estado
 
 - [X]En proceso.
-- [ ]En pruebas.
-- [ ]Finalizado.
+- [X]En pruebas.
+- [X]Finalizado.
 
 
 # Notas
@@ -45,13 +45,13 @@ Implementación de entidades:
   - moveForward(): método que, si la celda destino del mapa es visitable, mueve al jugador una celda hacia delante en la dirección que mira.
     - Si facing = 'N': y = y - 1;
     - Si facing = 'S': y = y + 1;
-    - Si facing = 'E': x = x - 1;
-    - Si facing = 'W': x = x + 1;
+    - Si facing = 'E': x = x + 1;
+    - Si facing = 'W': x = x - 1;
  - moveBackward(): método que, si la celda destino del mapa es visitable, mueve al jugador una celda hacia atrás en la dirección que mira.
     - Si facing = 'N': y = y + 1;
     - Si facing = 'S': y = y - 1;
-    - Si facing = 'E': x = x + 1;
-    - Si facing = 'W': x = x - 1;
+    - Si facing = 'E': x = x - 1;
+    - Si facing = 'W': x = x + 1;
   - rotateLeft(): método que gira hacia la izquierda la dirección en la que mira el jugador.
     - Si facing = 'N': facing = 'W';
     - Si facing = 'S': facing = 'E';

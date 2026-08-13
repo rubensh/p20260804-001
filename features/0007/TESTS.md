@@ -17,7 +17,8 @@
 13. `mainMenuCreditsMainScrollsInFifteenSeconds`: las secciones principales de los créditos recorren la pantalla en quince segundos.
 14. `mainMenuCreditsConceptUsesDoubleFontAndFiveSeconds`: la sección final de los créditos usa doble tamaño de fuente y cinco segundos.
 15. `mainMenuCreditsRestoresPanelWhenFinished`: al finalizar los créditos se vuelve a mostrar el panel del menú.
+16. `mainMenuNewGameButtonStartsGameScene`: el botón de nuevo juego oculta el panel del menú y da paso a GameScene.
 
 ## UITestScene
 
-16. `uiTestSceneHasBackButton`: la escena de prueba declara el botón de vuelta al menú principal.
+17. `uiTestSceneHasBackButton`: la escena de prueba declara el botón de vuelta al menú principal.

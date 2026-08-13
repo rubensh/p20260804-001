@@ -72,6 +72,13 @@ Etiquetas: [phaser 3][entities]
 ````text
 Feature ID: 0009
 Nombre: feature-0009
-Descripción: Implementación de entidades: entidad base, jugador, enemigo.
+Descripción: Implementación de entidades: entidad base, jugador.
 Etiquetas: [phaser 3][entities]
+````
+
+````text
+Feature ID: 0010
+Nombre: feature-0010
+Descripción: Puesta en marcha de juego + Mapa + Jugador.
+Etiquetas: [phaser 3][frontend][assets][images]
 ````
