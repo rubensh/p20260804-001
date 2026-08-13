@@ -19,9 +19,34 @@ const GAME_FOV_MIDDLE_SCALE = 0.4;
 const GAME_FOV_NEAR_SCALE = 0.8;
 const GAME_FOV_FAR_DARKNESS = 0.5;
 const GAME_FOV_MIDDLE_DARKNESS = 0.25;
-const GAME_FOV_NEAR_SLIVER = 0.1;
-const GAME_FOV_FAR_DEPTH = 2;
-const GAME_FOV_MIDDLE_DEPTH = 1;
+const GAME_FOV_NEAR_DARKNESS = 0;
+const GAME_FOV_FAR_DEPTH = 3;
+const GAME_FOV_MIDDLE_DEPTH = 2;
+const GAME_FOV_NEAR_DEPTH = 1;
+const GAME_FOV_FAR_RADIUS = 2;
+const GAME_FOV_MIDDLE_RADIUS = 1;
+const GAME_FOV_NEAR_RADIUS = 0;
+const GAME_FOV_FAR_PERSPECTIVE_RADIUS = 2;
+const GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS = 2;
+const GAME_FOV_NEAR_PERSPECTIVE_RADIUS = 1;
+const GAME_FOV_FAR_VERTICAL_OFFSET = 16;
+const GAME_FOV_MIDDLE_VERTICAL_OFFSET = 8;
+const GAME_FOV_NEAR_VERTICAL_OFFSET = 4;
+const GAME_FOV_PLAYER_VERTICAL_OFFSET = 4;
+const GAME_FOV_PERSPECTIVE_SCALE = 0.5;
+const GAME_FOV_WALL_SOURCE_SIZE = 256;
+const GAME_FOV_PERSPECTIVE_SOURCE_WIDTH = 128;
+const GAME_FOV_PERSPECTIVE_SOURCE_HEIGHT = 512;
+const GAME_FOV_PLAYER_DEPTH = 0;
+const GAME_FOV_PLAYER_SIDE_DISTANCE = 1;
+const GAME_FOV_FORWARD_DEPTH = 1;
+const GAME_FOV_LEFT_LATERAL = -1;
+const GAME_FOV_RIGHT_LATERAL = 1;
+const GAME_FOV_NORTH_EXCLUDED_X = 2;
+const GAME_FOV_NORTH_EXCLUDED_Y = -1;
+const GAME_COLOR_CHANNEL_MAX = 255;
+const GAME_COLOR_GREEN_MULTIPLIER = 0x100;
+const GAME_COLOR_RED_MULTIPLIER = 0x10000;
 
 const GAME_HUD_X = 400;
 const GAME_HUD_WIDTH = 390;
@@ -187,73 +212,154 @@ class GameScene extends Phaser.Scene {
         this.renderFarLevel();
         this.renderMiddleLevel();
         this.renderNearLevel();
+        this.renderPlayerLevel();
     }
 
     renderFarLevel() {
-        const cells = this.getRowInView(GAME_FOV_FAR_DEPTH, 2);
-        const cellWidth = GAME_FOV_WIDTH / cells.length;
-        cells.forEach((cell, index) => {
-            if (!this.isVisitable(cell.x, cell.y)) {
-                const wall = this.add.image(cellWidth * (index + 0.5), GAME_FOV_HEIGHT * 0.35,
-                    this.selectWall(cell.x, cell.y));
-                wall.setScale(GAME_FOV_FAR_SCALE);
-                wall.setDisplaySize(cellWidth, GAME_FOV_HEIGHT * GAME_FOV_FAR_SCALE);
-                wall.setTint(0x808080);
-                wall.setAlpha(1 - GAME_FOV_FAR_DARKNESS);
-                this.fieldOfViewContainer.add(wall);
-            }
-        });
+        this.renderDepthLevel(
+            GAME_FOV_FAR_DEPTH,
+            GAME_FOV_FAR_RADIUS,
+            GAME_FOV_FAR_SCALE,
+            GAME_FOV_FAR_DARKNESS,
+            GAME_FOV_FAR_VERTICAL_OFFSET,
+            GAME_FOV_FAR_PERSPECTIVE_RADIUS
+        );
     }
 
     renderMiddleLevel() {
-        const cells = this.getRowInView(GAME_FOV_MIDDLE_DEPTH, 1);
-        const cellWidth = GAME_FOV_WIDTH / cells.length;
-        cells.forEach((cell, index) => {
+        this.renderDepthLevel(
+            GAME_FOV_MIDDLE_DEPTH,
+            GAME_FOV_MIDDLE_RADIUS,
+            GAME_FOV_MIDDLE_SCALE,
+            GAME_FOV_MIDDLE_DARKNESS,
+            GAME_FOV_MIDDLE_VERTICAL_OFFSET,
+            GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS
+        );
+    }
+
+    renderNearLevel() {
+        this.renderDepthLevel(
+            GAME_FOV_NEAR_DEPTH,
+            GAME_FOV_NEAR_RADIUS,
+            GAME_FOV_NEAR_SCALE,
+            GAME_FOV_NEAR_DARKNESS,
+            GAME_FOV_NEAR_VERTICAL_OFFSET,
+            GAME_FOV_NEAR_PERSPECTIVE_RADIUS
+        );
+    }
+
+    renderDepthLevel(depth, frontRadius, scale, darkness, verticalOffset, perspectiveRadius) {
+        const wallWidth = GAME_FOV_WIDTH * scale;
+        const wallHeight = GAME_FOV_HEIGHT * scale;
+        const centerY = GAME_FOV_HEIGHT / 2 + verticalOffset;
+        const perspectiveCells = this.getRowInView(depth, perspectiveRadius);
+        const frontCells = this.getRowInView(depth, frontRadius);
+
+        perspectiveCells.forEach((cell, index) => {
+            const lateral = index - perspectiveRadius;
+            if (lateral !== 0 && !this.isVisitable(cell.x, cell.y)) {
+                this.drawPerspectiveWall(cell, lateral, wallWidth, wallHeight, centerY, darkness);
+            }
+        });
+
+        frontCells.forEach((cell, index) => {
             if (!this.isVisitable(cell.x, cell.y)) {
-                const wall = this.add.image(cellWidth * (index + 0.5), GAME_FOV_HEIGHT * 0.48,
-                    this.selectWall(cell.x, cell.y));
-                wall.setScale(GAME_FOV_MIDDLE_SCALE);
-                wall.setDisplaySize(cellWidth, GAME_FOV_HEIGHT * GAME_FOV_MIDDLE_SCALE);
-                wall.setTint(0xbfbfbf);
-                wall.setAlpha(1 - GAME_FOV_MIDDLE_DARKNESS);
-                this.fieldOfViewContainer.add(wall);
+                const lateral = index - frontRadius;
+                this.drawFrontWall(cell, lateral, wallWidth, wallHeight, centerY, darkness);
             }
         });
     }
 
-    renderNearLevel() {
-        const forward = this.getRelativeCell(1, 0);
-        const left = this.getRelativeCell(1, -1);
-        const right = this.getRelativeCell(1, 1);
-        const nearWidth = GAME_FOV_WIDTH * GAME_FOV_NEAR_SCALE;
-        const nearHeight = GAME_FOV_HEIGHT * GAME_FOV_NEAR_SCALE;
-
-        if (!this.isVisitable(forward.x, forward.y)) {
-            const frontWall = this.add.image(GAME_FOV_WIDTH / 2, GAME_FOV_HEIGHT / 2,
-                this.selectWall(forward.x, forward.y));
-            frontWall.setScale(GAME_FOV_NEAR_SCALE);
-            frontWall.setDisplaySize(nearWidth, nearHeight);
-            this.fieldOfViewContainer.add(frontWall);
-        }
-
-        this.drawNearSliver(left, true, nearWidth, nearHeight);
-        this.drawNearSliver(right, false, nearWidth, nearHeight);
+    drawFrontWall(cell, lateral, wallWidth, wallHeight, centerY, darkness) {
+        const wall = this.add.image(
+            GAME_FOV_WIDTH / 2 + lateral * wallWidth,
+            centerY,
+            this.selectWall(cell.x, cell.y)
+        );
+        wall.setDisplaySize(wallWidth, wallHeight);
+        wall.setTint(this.getDarknessTint(darkness));
+        this.fieldOfViewContainer.add(wall);
     }
 
-    drawNearSliver(cell, isLeft, nearWidth, nearHeight) {
-        if (this.isVisitable(cell.x, cell.y)) {
-            return;
-        }
-        const perspectiveWall = this.add.image(
-            isLeft ? nearWidth * GAME_FOV_NEAR_SLIVER / 2 : GAME_FOV_WIDTH - nearWidth * GAME_FOV_NEAR_SLIVER / 2,
-            GAME_FOV_HEIGHT / 2,
-            this.selectPerspectiveWall(cell.x, cell.y)
-        );
-        perspectiveWall.setDisplaySize(nearWidth * GAME_FOV_NEAR_SLIVER, nearHeight);
+    drawPerspectiveWall(cell, lateral, wallWidth, wallHeight, centerY, darkness) {
+        const sourceWidthRatio = GAME_FOV_PERSPECTIVE_SOURCE_WIDTH / GAME_FOV_WALL_SOURCE_SIZE;
+        const sourceHeightRatio = GAME_FOV_PERSPECTIVE_SOURCE_HEIGHT / GAME_FOV_WALL_SOURCE_SIZE;
+        const perspectiveWidth = wallWidth * sourceWidthRatio * GAME_FOV_PERSPECTIVE_SCALE;
+        const perspectiveHeight = wallHeight * sourceHeightRatio * GAME_FOV_PERSPECTIVE_SCALE;
+        const isLeft = lateral < 0;
+        const frontWallX = GAME_FOV_WIDTH / 2 + lateral * wallWidth;
+        const frontWallLeft = frontWallX - wallWidth / 2;
+        const frontWallRight = frontWallX + wallWidth / 2;
+        const perspectiveX = isLeft
+            ? frontWallRight + perspectiveWidth / 2
+            : frontWallLeft - perspectiveWidth / 2;
+        const perspectiveWall = this.add.image(perspectiveX, centerY,
+            this.selectPerspectiveWall(cell.x, cell.y));
+        perspectiveWall.setDisplaySize(perspectiveWidth, perspectiveHeight);
+        perspectiveWall.setTint(this.getDarknessTint(darkness));
         if (!isLeft) {
             perspectiveWall.setFlipX(true);
         }
         this.fieldOfViewContainer.add(perspectiveWall);
+    }
+
+    getDarknessTint(darkness) {
+        const channel = Math.round(GAME_COLOR_CHANNEL_MAX * (1 - darkness));
+        return channel * GAME_COLOR_RED_MULTIPLIER
+            + channel * GAME_COLOR_GREEN_MULTIPLIER
+            + channel;
+    }
+
+    renderPlayerLevel() {
+        const left = this.getRelativeCell(GAME_FOV_PLAYER_DEPTH, -GAME_FOV_PLAYER_SIDE_DISTANCE);
+        const right = this.getRelativeCell(GAME_FOV_PLAYER_DEPTH, GAME_FOV_PLAYER_SIDE_DISTANCE);
+        const forwardLeft = this.getRelativeCell(GAME_FOV_FORWARD_DEPTH, GAME_FOV_LEFT_LATERAL);
+        const forwardRight = this.getRelativeCell(GAME_FOV_FORWARD_DEPTH, GAME_FOV_RIGHT_LATERAL);
+        this.drawPlayerFrontSideWall(forwardLeft, true);
+        this.drawPlayerFrontSideWall(forwardRight, false);
+        this.drawPlayerSideWall(left, true);
+        this.drawPlayerSideWall(right, false);
+    }
+
+    drawPlayerSideWall(cell, isLeft) {
+        if (this.isVisitable(cell.x, cell.y)) {
+            return;
+        }
+        const perspectiveWidth = GAME_FOV_WIDTH
+            * GAME_FOV_PERSPECTIVE_SOURCE_WIDTH / GAME_FOV_WALL_SOURCE_SIZE;
+        const perspectiveHeight = GAME_FOV_HEIGHT
+            * GAME_FOV_PERSPECTIVE_SOURCE_HEIGHT / GAME_FOV_WALL_SOURCE_SIZE;
+        const nearWallHalfWidth = GAME_FOV_WIDTH * GAME_FOV_NEAR_SCALE / 2;
+        const nearWallLeftEdge = GAME_FOV_WIDTH / 2 - nearWallHalfWidth;
+        const nearWallRightEdge = GAME_FOV_WIDTH / 2 + nearWallHalfWidth;
+        const perspectiveX = isLeft
+            ? nearWallLeftEdge - perspectiveWidth / 2
+            : nearWallRightEdge + perspectiveWidth / 2;
+        const perspectiveWall = this.add.image(
+            perspectiveX,
+            GAME_FOV_HEIGHT / 2 + GAME_FOV_PLAYER_VERTICAL_OFFSET,
+            this.selectPerspectiveWall(cell.x, cell.y)
+        );
+        perspectiveWall.setDisplaySize(perspectiveWidth, perspectiveHeight);
+        if (!isLeft) {
+            perspectiveWall.setFlipX(true);
+        }
+        this.fieldOfViewContainer.add(perspectiveWall);
+    }
+
+    drawPlayerFrontSideWall(cell, isLeft) {
+        if (this.isExcludedFromFieldOfView(cell.x, cell.y) || this.isVisitable(cell.x, cell.y)) {
+            return;
+        }
+        const nearWallWidth = GAME_FOV_WIDTH * GAME_FOV_NEAR_SCALE;
+        const nearWallHeight = GAME_FOV_HEIGHT * GAME_FOV_NEAR_SCALE;
+        const wall = this.add.image(
+            GAME_FOV_WIDTH / 2 + (isLeft ? -nearWallWidth : nearWallWidth),
+            GAME_FOV_HEIGHT / 2 + GAME_FOV_PLAYER_VERTICAL_OFFSET,
+            this.selectWall(cell.x, cell.y)
+        );
+        wall.setDisplaySize(nearWallWidth, nearWallHeight);
+        this.fieldOfViewContainer.add(wall);
     }
 
     selectBackground(x, y) {
@@ -345,7 +451,8 @@ class GameScene extends Phaser.Scene {
                 }
                 const x = this.player.x - MAZE_VISION_RADIUS + maskX;
                 const y = this.player.y - MAZE_VISION_RADIUS + maskY;
-                if (x >= 0 && x < this.maze.width && y >= 0 && y < this.maze.height) {
+                if (!this.isExcludedFromFieldOfView(x, y)
+                    && x >= 0 && x < this.maze.width && y >= 0 && y < this.maze.height) {
                     visibility[y][x] = true;
                 }
             }
@@ -372,6 +479,12 @@ class GameScene extends Phaser.Scene {
             x: this.player.x + direction.forwardX * forward + direction.rightX * lateral,
             y: this.player.y + direction.forwardY * forward + direction.rightY * lateral
         };
+    }
+
+    isExcludedFromFieldOfView(x, y) {
+        return this.player.facing === GAME_PLAYER_FACING_NORTH
+            && x - this.player.x === GAME_FOV_NORTH_EXCLUDED_X
+            && y - this.player.y === GAME_FOV_NORTH_EXCLUDED_Y;
     }
 
     isVisitable(x, y) {

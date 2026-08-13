@@ -152,6 +152,15 @@ class GameSceneTest
         assertTrue(scene.contains("GAME_FOV_NEAR_SCALE = 0.8"));
         assertTrue(scene.contains("GAME_FOV_FAR_DARKNESS = 0.5"));
         assertTrue(scene.contains("GAME_FOV_MIDDLE_DARKNESS = 0.25"));
+        assertTrue(scene.contains("GAME_FOV_FAR_DEPTH = 3"));
+        assertTrue(scene.contains("GAME_FOV_MIDDLE_DEPTH = 2"));
+        assertTrue(scene.contains("GAME_FOV_NEAR_DEPTH = 1"));
+        assertTrue(scene.contains("GAME_FOV_FAR_VERTICAL_OFFSET = 16"));
+        assertTrue(scene.contains("GAME_FOV_MIDDLE_VERTICAL_OFFSET = 8"));
+        assertTrue(scene.contains("GAME_FOV_NEAR_VERTICAL_OFFSET = 4"));
+        assertTrue(scene.contains("GAME_FOV_FAR_PERSPECTIVE_RADIUS = 2"));
+        assertTrue(scene.contains("GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS = 2"));
+        assertTrue(scene.contains("GAME_FOV_NEAR_PERSPECTIVE_RADIUS = 1"));
     }
 
     /** Comprueba la selección alterna de fondos. */
@@ -180,16 +189,85 @@ class GameSceneTest
         assertTrue(scene.contains("selectPerspectiveWall"));
         assertTrue(scene.contains("'Wall-Persp00' + wallIndex"));
         assertTrue(scene.contains("setFlipX(true)"));
+
+        int renderDepth = scene.indexOf("renderDepthLevel(depth");
+        int nextMethod = scene.indexOf("    drawFrontWall(cell, lateral", renderDepth);
+        String renderDepthMethod = scene.substring(renderDepth, nextMethod);
+        int perspectivePass = renderDepthMethod.indexOf("this.drawPerspectiveWall");
+        int frontPass = renderDepthMethod.indexOf("this.drawFrontWall");
+        assertTrue(perspectivePass >= 0 && frontPass > perspectivePass,
+                "Las paredes en perspectiva deben dibujarse antes que las frontales");
     }
 
-    /** Comprueba las franjas laterales del nivel cercano. */
+    /** Comprueba que la capa cercana dibuja las dos paredes en perspectiva. */
     @Test
-    void gameSceneDrawsNearSlivers() throws IOException
+    void gameSceneDrawsNearPerspectiveWalls() throws IOException
     {
         String scene = readGameScene();
-        assertTrue(scene.contains("GAME_FOV_NEAR_SLIVER = 0.1"));
-        assertTrue(scene.contains("drawNearSliver(left, true"));
-        assertTrue(scene.contains("drawNearSliver(right, false"));
+        int nearLevel = scene.indexOf("renderNearLevel() {");
+        int nextMethod = scene.indexOf("renderDepthLevel(", nearLevel);
+        int endCall = scene.indexOf(");", nextMethod);
+        String nearCall = scene.substring(nextMethod, endCall);
+        assertTrue(nearCall.contains("GAME_FOV_NEAR_RADIUS"));
+        assertTrue(nearCall.contains("GAME_FOV_NEAR_PERSPECTIVE_RADIUS"));
+    }
+
+    /** Comprueba el escalado y la alineación superior de las paredes en perspectiva. */
+    @Test
+    void gameSceneScalesPerspectiveWalls() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("GAME_FOV_PERSPECTIVE_SCALE = 0.5"));
+        assertTrue(scene.contains("GAME_FOV_PERSPECTIVE_SOURCE_WIDTH = 128"));
+        assertTrue(scene.contains("GAME_FOV_PERSPECTIVE_SOURCE_HEIGHT = 512"));
+        assertTrue(scene.contains("wallWidth * sourceWidthRatio * GAME_FOV_PERSPECTIVE_SCALE"));
+        assertTrue(scene.contains("wallHeight * sourceHeightRatio * GAME_FOV_PERSPECTIVE_SCALE"));
+        assertTrue(scene.contains("frontWallRight + perspectiveWidth / 2"));
+        assertTrue(scene.contains("frontWallLeft - perspectiveWidth / 2"));
+    }
+
+    /** Comprueba las paredes laterales situadas junto al jugador. */
+    @Test
+    void gameSceneRendersPlayerLevelSideWalls() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("this.renderPlayerLevel()"));
+        assertTrue(scene.contains("GAME_FOV_PLAYER_DEPTH = 0"));
+        assertTrue(scene.contains("GAME_FOV_PLAYER_VERTICAL_OFFSET = 4"));
+        assertTrue(scene.contains("drawPlayerSideWall(left, true)"));
+        assertTrue(scene.contains("drawPlayerSideWall(right, false)"));
+        assertTrue(scene.contains("nearWallLeftEdge - perspectiveWidth / 2"));
+        assertTrue(scene.contains("nearWallRightEdge + perspectiveWidth / 2"));
+        assertTrue(scene.contains("this.fieldOfViewContainer.setMask"));
+        assertTrue(scene.contains("drawPlayerFrontSideWall(forwardLeft, true)"));
+        assertTrue(scene.contains("drawPlayerFrontSideWall(forwardRight, false)"));
+
+        int playerLevel = scene.indexOf("renderPlayerLevel() {");
+        int nextMethod = scene.indexOf("drawPlayerSideWall(cell", playerLevel);
+        String playerLevelMethod = scene.substring(playerLevel, nextMethod);
+        int frontWalls = playerLevelMethod.indexOf("this.drawPlayerFrontSideWall");
+        int perspectiveWalls = playerLevelMethod.indexOf("this.drawPlayerSideWall");
+        assertTrue(frontWalls >= 0 && perspectiveWalls > frontWalls,
+                "La capa extra debe dibujar primero las paredes frontales");
+    }
+
+    /** Comprueba la exclusión específica del campo de visión al mirar al norte. */
+    @Test
+    void gameSceneExcludesNorthRelativeCell() throws IOException
+    {
+        String scene = readGameScene();
+        String maze = Files.readString(Path.of("webcontent/js/Maze.js"));
+
+        assertTrue(scene.contains("GAME_FOV_NORTH_EXCLUDED_X = 2"));
+        assertTrue(scene.contains("GAME_FOV_NORTH_EXCLUDED_Y = -1"));
+        assertTrue(scene.contains("this.player.facing === GAME_PLAYER_FACING_NORTH"));
+        assertTrue(scene.contains("!this.isExcludedFromFieldOfView(x, y)"));
+        assertTrue(scene.contains("this.isExcludedFromFieldOfView(cell.x, cell.y)"));
+        int northMaskStart = maze.indexOf("north: [");
+        int northMaskEnd = maze.indexOf("south: [", northMaskStart);
+        String northMask = maze.substring(northMaskStart, northMaskEnd);
+        assertTrue(northMask.contains("[0, 1, 1, 1, 0]"),
+                "La máscara norte no distingue correctamente (+1, -1) de (+2, -1)");
     }
 
     /** Comprueba los colores y el jugador del minimapa. */

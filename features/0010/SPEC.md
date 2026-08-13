@@ -41,6 +41,55 @@ Implementaremos la escena de juego, en la que se representará todo: UI, laberin
     - Si mira al este, gira hasta mirar al sur.
     - Si mira al sur, gira hasta mirar al oeste.
     - Si mira al oeste, gira hasta mirar al norte.
+- A tener en cuenta en el renderizado del campo de visión (1, 2 y 3 significa dentro del campo de visión, 0 significa fuera del campo de visión):
+
+```text
+
+X = posición del jugador.
+1, 2, 3: nivel de profundidad.
+
++---+---+---+---+---+   +---+---+---+---+---+   +---+---+---+---+---+   +---+---+---+---+---+
+| 3 | 3 | 3 | 3 | 3 |   | 0 | 0 | 0 | 0 | 0 |   | 0 | 0 | 0 | 0 | 3 |   | 3 | 0 | 0 | 0 | 0 |
+| 0 | 2 | 2 | 2 | 0 |   | 0 | / | X | \ | 0 |   | 0 | / | 0 | 2 | 3 |   | 3 | 2 | 0 | \ | 0 |
+| 0 | 0 | 1 | 0 | 0 |   | 0 | 0 | 1 | 0 | 0 |   | 0 | X | 1 | 2 | 3 |   | 3 | 2 | 1 | X | 0 |
+| 0 | \ | X | / | 0 |   | 0 | 2 | 2 | 2 | 0 |   | 0 | \ | 0 | 2 | 3 |   | 3 | 2 | 0 | / | 0 |
+| 0 | 0 | 0 | 0 | 0 |   | 3 | 3 | 3 | 3 | 3 |   | 0 | 0 | 0 | 0 | 3 |   | 3 | 0 | 0 | 0 | 0 |
++---+---+---+---+---+   +---+---+---+---+---+   +---+---+---+---+---+   +---+---+---+---+---+
+Norte                   Sur                     Este                    Oeste
+
+```
+  - Las imágenes de las paredes frontales tienen dimensiones 256 x 256. trabajaremos con porcentajes, por lo que en primer lugar, escalaremos las imágenes al ancho x alto del recuadro de campo de visión (2).
+  - Las imágenes de las paredes en perspectiva tienen dimensiones 128 x 512. trabajaremos con porcentajes, pero aplicaremos el mismo factor de escalado que con las imágenes frontales.
+  - Las imágenes en perspectiva que estén a derecha de la pantalla se mostrarán invertidas horizontalmente.
+  - Por cada nivel de profunidad, primero pinta las paredes en perspectiva, y luego las paredes frontales.
+
+  - Renderizado de profundidad = 3:
+    - Las imágenes estarán centradas verticalmente, pero en esta capa tendrán un desplazamiento vertical hacia abajo de 16 píxels.
+    - Para simular profundidad, sobre las imágenes frontales ya escaladas previamente, multiplicaremos por 0.2 el factor de escalado. También oscureceremos la imagen en un factor de 0.5.
+    - En profundidad 3 deberían mostrarse 4 paredes en perspectiva: dos a la izquierda (una en cada lateral izquierdo de cada pared, y cada esquina superior izquierda debe coincidir con la esquina superior derecha de la pared bajo la que está) y dos a la derecha (2 en cada lateral derecho de cada pared, y cada esquina superior derecha debe coincidir con la esquina superior izquierda de la pared bajo la que está). Las que están en perspectiva ademas del factor de escalado, se multiplicarán por 0.5.
+    - En profundidad 3 deberían mostrarse 5 paredes frontales: dos a la izquierda, una en el centro, y dos a la derecha.
+    - Si miramos al norte, las paredes en perspectiva corresponderían a la posición relativa al jugador (-2, -3), (-1, -3), (+1, -3) y (+2, -3).
+
+  - Renderizado de profundidad = 2:
+    - Las imágenes estarán centradas verticalmente, pero en esta capa tendrán un desplazamiento vertical hacia abajo de 8 píxels.
+    - Sobre las imágenes frontales ya escaladas previamente, multiplicaremos por 0.4 el factor de escalado. También oscureceremos la imagen en un factor de 0.25.
+    - En profundidad 2 deberían mostrarse 2 paredes en perspectiva: una a la izquierda (en el lateral izquierdo de la pared, y su esquina superior izquierda debe coincidir con la esquina superior derecha de la pared bajo la que está) y otra a la derecha (en el lateral derecho de la pared, y su esquina superior derecha debe coincidir con la esquina superior izqueirda de la pared bajo la que está). Las que están en perspectiva ademas del factor de escalado, se multiplicarán por 0.5.
+    - En profundidad 2 deberían mostrarse 3 paredes: una a la izquierda, una en el centro, y una a la derecha.
+    - Si miramos al norte, las paredes en perspectiva corresponderían a la posición relativa al jugador (-2, -2), (-1, -2), (+1, -2) y (+2, -2).
+
+  - Renderizado de profundidad = 1:
+    - Las imágenes estarán centradas verticalmente, pero en esta capa tendrán un desplazamiento vertical hacia abajo de 4 píxels.
+    - Sobre las imágenes frontales ya escaladas previamente, multiplicaremos por 0.8 el factor de escalado. La imagen no se oscurecerá.
+    - En profundidad 1 deberían mostrarse 2 paredes en perspectiva: una a la izquierda (en el lateral izquierdo de la pared, y su esquina superior izquierda debe coincidir con la esquina superior derecha de la pared bajo la que está) y otra a la derecha (en el lateral derecho de la pared, y su esquina superior derecha debe coincidir con la esquina superior izquierda de la pared bajo la que está). Las que están en perspectiva además del factor de escalado, se multiplicarán por 0.5.
+    - Si miramos al norte, las paredes en perspectiva corresponderían a la posición relativa al jugador (-1, -1) y (+1, -1).
+
+  - Renderizado extra en la posición del jugador:
+    - Las imágenes estarán centradas verticalmente, pero en esta capa tendrán un desplazamiento vertical hacia abajo de 4 píxels.
+    - Si la celda a la izquierda del jugador es no visitable, se mostrará una pared en perspectiva a la izquierda de la pared frontal. Lo mismo sucederá con la celda derecha.
+    - Si la celda ubicada delante a la izquieda no es visitable, mostraremos una pared a la izquierda de la pared frontal. Lo mismo pasa por la derecha. Ambas imágenes extra estarán recortadas para no salirse del campo de visión.
+    - El borde derecho de la pared en perspectiva izquierda colindará con el borde izquierdo de la pared frontal. A su vez, el borde izquierdo de pared en perspectiva derecha colindará con el dborde derecho de la pared frontal, pero recortarás ambas imágenes en perspectiva para que no se vean fuera del recuadro del campo de visión.
+    - Esta profundidad extra sólo tiene el escalado calculado para el campo de visión.
+    - Solo para el renderizado extra, primero se pintan las paredes frontales y luego las paredes en perspectiva.
 
 
 # Restricciones
