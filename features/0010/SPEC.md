@@ -1,6 +1,6 @@
 # feature-0010
 
-Implelentación de escena de juego.
+Implementación de escena de juego.
 
 
 # Objetivo
