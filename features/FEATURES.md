@@ -80,5 +80,5 @@ Etiquetas: [phaser 3][entities]
 Feature ID: 0010
 Nombre: feature-0010
 Descripción: Puesta en marcha de juego + Mapa + Jugador.
-Etiquetas: [phaser 3][frontend][assets][images]
+Etiquetas: [phaser 3][frontend][assets][images][v1.0.0]
 ````
