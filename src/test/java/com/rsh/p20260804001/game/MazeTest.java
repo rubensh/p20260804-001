@@ -260,10 +260,72 @@ class MazeTest
         String maze = Files.readString(MAZE_JS);
 
         assertTrue(maze.contains("percentVisitable"), "Falta el parámetro del porcentaje de visitables");
-        assertTrue(maze.contains("Math.floor(width * height * percentVisitable)"),
+        assertTrue(maze.contains("Math.floor(percentVisitable)"),
                 "Falta el cálculo del objetivo de celdas visitables");
         assertTrue(maze.contains("isBorderCell"), "Falta la comprobación de celdas frontera");
-        assertTrue(maze.contains("findNextVisitableCell"), "Falta la búsqueda de la siguiente celda visitable");
+        assertTrue(maze.contains("findCorridorFrontier"), "Falta la búsqueda de una frontera conectada");
+    }
+
+    /** Comprueba la nueva firma de generación con pasos rectos. */
+    @Test
+    void mazeGenerateMapAcceptsSteps() throws IOException
+    {
+        String maze = Files.readString(MAZE_JS);
+
+        assertTrue(maze.contains("generateMap(width, height, percentVisitable, steps, currentLevel)"),
+                "generateMap no recibe el parámetro steps");
+    }
+
+    /** Comprueba el cálculo de pasos y celdas visitables para cada nivel. */
+    @Test
+    void mazeCalculatesGenerationParametersByLevel() throws IOException
+    {
+        String maze = Files.readString(MAZE_JS);
+
+        assertTrue(maze.contains("level = currentLevel"));
+        assertTrue(maze.contains("(MAZE_BASE_CORRIDOR_LENGTH - level) * MAZE_CORRIDOR_STEP_MULTIPLIER"));
+        assertTrue(maze.contains("this.width * this.height * (level + MAZE_LEVEL_NUMBER_OFFSET)"));
+        assertTrue(maze.contains("MAZE_VISITABLE_DEPTH_FACTOR = 0.8"));
+        assertTrue(maze.contains("/ (MAZE_DEFAULT_DEPTH * MAZE_VISITABLE_DEPTH_FACTOR)"));
+        assertTrue(maze.contains("this.generateMap(this.width, this.height, percentVisitable, steps, currentLevel)"));
+    }
+
+    /** Comprueba que cada dirección se mantiene durante el número de pasos indicado. */
+    @Test
+    void mazeWalksStraightForConfiguredSteps() throws IOException
+    {
+        String maze = Files.readString(MAZE_JS);
+
+        assertTrue(maze.contains("currentStep < steps && visitableCells < targetVisitableCells"));
+        assertTrue(maze.contains("current.x + direction.x"));
+        assertTrue(maze.contains("current.y + direction.y"));
+        assertTrue(maze.contains("matrix[current.y][current.x] === MAZE_ROOM_WALL"));
+    }
+
+    /** Comprueba que los tramos rectos no perforan el borde del mapa. */
+    @Test
+    void mazeStraightWalkPreservesBorders() throws IOException
+    {
+        String maze = Files.readString(MAZE_JS);
+
+        int stepsLoop = maze.indexOf("currentStep < steps");
+        int borderCheck = maze.indexOf("this.isBorderCell(next.x, next.y, width, height)", stepsLoop);
+        int markCell = maze.indexOf("markVisitable(current.x, current.y)", borderCheck);
+        assertTrue(stepsLoop >= 0 && borderCheck > stepsLoop && markCell > borderCheck,
+                "El borde debe comprobarse antes de marcar cada paso como visitable");
+    }
+
+    /** Comprueba que un tramo sin cambios fuerza el avance desde una frontera conectada. */
+    @Test
+    void mazeGenerationGuaranteesProgress() throws IOException
+    {
+        String maze = Files.readString(MAZE_JS);
+
+        assertTrue(maze.contains("visitableCellsBeforeWalk"));
+        assertTrue(maze.contains("this.findCorridorFrontier(matrix, width, height)"));
+        assertTrue(maze.contains("current = frontier.current"));
+        assertTrue(maze.contains("forcedDirection = frontier.direction"));
+        assertTrue(maze.contains("matrix[nextY][nextX] === MAZE_ROOM_WALL"));
     }
 
     /**

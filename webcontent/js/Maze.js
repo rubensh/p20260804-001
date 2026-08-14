@@ -10,6 +10,10 @@ const MAZE_STAIRCASE_DOWN = 2;
 const MAZE_STAIRCASE_UP = 3;
 
 const MAZE_FIRST_LEVEL = 0;
+const MAZE_LEVEL_NUMBER_OFFSET = 1;
+const MAZE_BASE_CORRIDOR_LENGTH = 8;
+const MAZE_CORRIDOR_STEP_MULTIPLIER = 2.0;
+const MAZE_VISITABLE_DEPTH_FACTOR = 0.8;
 
 const MAZE_VISION_VISIBLE = 1;
 const MAZE_VISION_RADIUS = 2;
@@ -62,14 +66,18 @@ class Maze {
         this.visibility = [];
     }
 
-    generateMaze(percentVisitable) {
+    generateMaze() {
         for (let currentLevel = MAZE_FIRST_LEVEL; currentLevel < this.depth; currentLevel++) {
-            this.generateMap(this.width, this.height, percentVisitable, currentLevel);
+            const level = currentLevel;
+            const steps = (MAZE_BASE_CORRIDOR_LENGTH - level) * MAZE_CORRIDOR_STEP_MULTIPLIER;
+            const percentVisitable = this.width * this.height * (level + MAZE_LEVEL_NUMBER_OFFSET)
+                / (MAZE_DEFAULT_DEPTH * MAZE_VISITABLE_DEPTH_FACTOR);
+            this.generateMap(this.width, this.height, percentVisitable, steps, currentLevel);
         }
         this.applyInitialFieldOfView();
     }
 
-    generateMap(width, height, percentVisitable, currentLevel) {
+    generateMap(width, height, percentVisitable, steps, currentLevel) {
         const matrix = this.createLevel(width, height);
         const visibilityMatrix = this.createVisibilityLevel(width, height);
 
@@ -80,11 +88,12 @@ class Maze {
 
         const start = this.getStartPosition(currentLevel, center, width, height);
 
-        const targetVisitableCells = Math.floor(width * height * percentVisitable);
         const maxVisitableCells = (width - 2) * (height - 2);
+        const targetVisitableCells = Math.min(Math.floor(percentVisitable), maxVisitableCells);
 
         let visitableCells = 0;
         let current = { x: start.x, y: start.y };
+        let forcedDirection = null;
 
         const markVisitable = (x, y) => {
             matrix[y][x] = MAZE_ROOM_EMPTY;
@@ -94,25 +103,33 @@ class Maze {
         markVisitable(current.x, current.y);
 
         while (visitableCells < targetVisitableCells && visitableCells < maxVisitableCells) {
-            const direction = this.getRandomDirection();
-            const next = { x: current.x + direction.x, y: current.y + direction.y };
+            const visitableCellsBeforeWalk = visitableCells;
+            const direction = forcedDirection || this.getRandomDirection();
+            forcedDirection = null;
+            for (let currentStep = 0;
+                currentStep < steps && visitableCells < targetVisitableCells;
+                currentStep++) {
+                const next = { x: current.x + direction.x, y: current.y + direction.y };
 
-            if (this.isBorderCell(next.x, next.y, width, height)) {
-                current = { x: start.x, y: start.y };
-                continue;
-            }
-
-            if (matrix[next.y][next.x] !== MAZE_ROOM_WALL) {
-                current = this.findNextVisitableCell(matrix, width, height);
-                if (!current) {
+                if (this.isBorderCell(next.x, next.y, width, height)) {
+                    current = { x: start.x, y: start.y };
                     break;
                 }
-                markVisitable(current.x, current.y);
-                continue;
+
+                current = next;
+                if (matrix[current.y][current.x] === MAZE_ROOM_WALL) {
+                    markVisitable(current.x, current.y);
+                }
             }
 
-            current = next;
-            markVisitable(current.x, current.y);
+            if (visitableCells === visitableCellsBeforeWalk) {
+                const frontier = this.findCorridorFrontier(matrix, width, height);
+                if (!frontier) {
+                    break;
+                }
+                current = frontier.current;
+                forcedDirection = frontier.direction;
+            }
         }
 
         const downStaircase = { x: current.x, y: current.y };
@@ -185,11 +202,19 @@ class Maze {
         return null;
     }
 
-    findNextVisitableCell(matrix, width, height) {
+    findCorridorFrontier(matrix, width, height) {
         for (let y = 1; y < height - 1; y++) {
             for (let x = 1; x < width - 1; x++) {
                 if (matrix[y][x] === MAZE_ROOM_WALL) {
-                    return { x, y };
+                    continue;
+                }
+                for (const direction of MAZE_DIRECTIONS) {
+                    const nextX = x + direction.x;
+                    const nextY = y + direction.y;
+                    if (!this.isBorderCell(nextX, nextY, width, height)
+                        && matrix[nextY][nextX] === MAZE_ROOM_WALL) {
+                        return { current: { x, y }, direction };
+                    }
                 }
             }
         }

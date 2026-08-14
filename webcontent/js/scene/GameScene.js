@@ -1,6 +1,5 @@
 'use strict';
 
-const GAME_MAP_VISITABLE_PERCENT = 0.45;
 const GAME_PLAYER_ID = 'Player001';
 const GAME_PLAYER_LEVEL = 0;
 const GAME_PLAYER_FACING_NORTH = 'N';
@@ -104,7 +103,7 @@ class GameScene extends Phaser.Scene {
     create() {
         this.cameras.main.setBackgroundColor('#000000');
         this.maze = new Maze();
-        this.maze.generateMaze(GAME_MAP_VISITABLE_PERCENT);
+        this.maze.generateMaze();
 
         const center = this.maze.getCenter(this.maze.width, this.maze.height);
         this.player = new Player(

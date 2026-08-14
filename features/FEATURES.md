@@ -82,3 +82,10 @@ Nombre: feature-0010
 Descripción: Puesta en marcha de juego + Mapa + Jugador.
 Etiquetas: [phaser 3][frontend][assets][images][v1.0.0]
 ````
+
+````text
+Feature ID: 0011
+Nombre: feature-0011
+Descripción: Cambios en el algoritmo de generación de mapas para generar pasillos, habitaciones, ....
+Etiquetas: [phaser 3]
+````
