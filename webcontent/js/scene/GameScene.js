@@ -43,6 +43,15 @@ const GAME_FOV_LEFT_LATERAL = -1;
 const GAME_FOV_RIGHT_LATERAL = 1;
 const GAME_FOV_NORTH_EXCLUDED_X = 2;
 const GAME_FOV_NORTH_EXCLUDED_Y = -1;
+const GAME_STAIRS_FAR_SCALE = 0.25;
+const GAME_STAIRS_MIDDLE_SCALE = 0.5;
+const GAME_STAIRS_NEAR_SCALE = 1.0;
+const GAME_STAIRS_FAR_VERTICAL_OFFSET = 14;
+const GAME_STAIRS_MIDDLE_VERTICAL_OFFSET = 2;
+const GAME_STAIRS_NEAR_VERTICAL_OFFSET = 0;
+const GAME_STAIRS_FAR_ILLUMINATION = 0.25;
+const GAME_STAIRS_MIDDLE_ILLUMINATION = 0.5;
+const GAME_STAIRS_NEAR_ILLUMINATION = 1.0;
 const GAME_COLOR_CHANNEL_MAX = 255;
 const GAME_COLOR_GREEN_MULTIPLIER = 0x100;
 const GAME_COLOR_RED_MULTIPLIER = 0x10000;
@@ -72,7 +81,10 @@ const GAME_MINIMAP_HIDDEN_COLOR = 0x888888;
 const GAME_MINIMAP_WALL_COLOR = 0x333333;
 const GAME_MINIMAP_VISITABLE_COLOR = 0x000000;
 const GAME_MINIMAP_PLAYER_COLOR = 0xff0000;
+const GAME_MINIMAP_STAIRCASE_DOWN_COLOR = 0xff0000;
+const GAME_MINIMAP_STAIRCASE_UP_COLOR = 0x0000ff;
 const GAME_MINIMAP_PLAYER_MARGIN = 1;
+const GAME_CENTER_DIVISOR = 2;
 const GAME_LEVEL_LABEL_X = 410;
 const GAME_LEVEL_LABEL_Y = 68;
 const GAME_LEVEL_TEXT_COLOR = '#ffffff';
@@ -85,7 +97,9 @@ const GAME_ASSETS = [
     { key: 'Wall003', file: '/assets/images/Wall003.png' },
     { key: 'Wall-Persp001', file: '/assets/images/Wall-Persp001.png' },
     { key: 'Wall-Persp002', file: '/assets/images/Wall-Persp002.png' },
-    { key: 'Wall-Persp003', file: '/assets/images/Wall-Persp003.png' }
+    { key: 'Wall-Persp003', file: '/assets/images/Wall-Persp003.png' },
+    { key: 'Stairs-Up', file: '/assets/images/Stairs-Up.png' },
+    { key: 'Stairs-Down', file: '/assets/images/Stairs-Down.png' }
 ];
 
 class GameScene extends Phaser.Scene {
@@ -221,7 +235,10 @@ class GameScene extends Phaser.Scene {
             GAME_FOV_FAR_SCALE,
             GAME_FOV_FAR_DARKNESS,
             GAME_FOV_FAR_VERTICAL_OFFSET,
-            GAME_FOV_FAR_PERSPECTIVE_RADIUS
+            GAME_FOV_FAR_PERSPECTIVE_RADIUS,
+            GAME_STAIRS_FAR_SCALE,
+            GAME_STAIRS_FAR_VERTICAL_OFFSET,
+            GAME_STAIRS_FAR_ILLUMINATION
         );
     }
 
@@ -232,7 +249,10 @@ class GameScene extends Phaser.Scene {
             GAME_FOV_MIDDLE_SCALE,
             GAME_FOV_MIDDLE_DARKNESS,
             GAME_FOV_MIDDLE_VERTICAL_OFFSET,
-            GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS
+            GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS,
+            GAME_STAIRS_MIDDLE_SCALE,
+            GAME_STAIRS_MIDDLE_VERTICAL_OFFSET,
+            GAME_STAIRS_MIDDLE_ILLUMINATION
         );
     }
 
@@ -243,11 +263,15 @@ class GameScene extends Phaser.Scene {
             GAME_FOV_NEAR_SCALE,
             GAME_FOV_NEAR_DARKNESS,
             GAME_FOV_NEAR_VERTICAL_OFFSET,
-            GAME_FOV_NEAR_PERSPECTIVE_RADIUS
+            GAME_FOV_NEAR_PERSPECTIVE_RADIUS,
+            GAME_STAIRS_NEAR_SCALE,
+            GAME_STAIRS_NEAR_VERTICAL_OFFSET,
+            GAME_STAIRS_NEAR_ILLUMINATION
         );
     }
 
-    renderDepthLevel(depth, frontRadius, scale, darkness, verticalOffset, perspectiveRadius) {
+    renderDepthLevel(depth, frontRadius, scale, darkness, verticalOffset, perspectiveRadius,
+        staircaseScale, staircaseVerticalOffset, staircaseIllumination) {
         const wallWidth = GAME_FOV_WIDTH * scale;
         const wallHeight = GAME_FOV_HEIGHT * scale;
         const centerY = GAME_FOV_HEIGHT / 2 + verticalOffset;
@@ -262,11 +286,43 @@ class GameScene extends Phaser.Scene {
         });
 
         frontCells.forEach((cell, index) => {
+            const lateral = index - frontRadius;
+            this.drawStaircase(cell, lateral, wallWidth, staircaseScale,
+                staircaseVerticalOffset, staircaseIllumination);
+        });
+
+        frontCells.forEach((cell, index) => {
             if (!this.isVisitable(cell.x, cell.y)) {
                 const lateral = index - frontRadius;
                 this.drawFrontWall(cell, lateral, wallWidth, wallHeight, centerY, darkness);
             }
         });
+    }
+
+    drawStaircase(cell, lateral, wallWidth, staircaseScale, verticalOffset, illumination) {
+        const room = this.getRoom(cell.x, cell.y);
+        if (room !== MAZE_STAIRCASE_UP && room !== MAZE_STAIRCASE_DOWN) {
+            return;
+        }
+        const texture = room === MAZE_STAIRCASE_UP ? 'Stairs-Up' : 'Stairs-Down';
+        const staircase = this.add.image(
+            GAME_FOV_WIDTH / 2 + lateral * wallWidth,
+            GAME_FOV_HEIGHT / 2 + verticalOffset,
+            texture
+        );
+        staircase.setDisplaySize(
+            GAME_FOV_WIDTH * staircaseScale,
+            GAME_FOV_HEIGHT * staircaseScale
+        );
+        staircase.setTint(this.getIlluminationTint(illumination));
+        this.fieldOfViewContainer.add(staircase);
+    }
+
+    getIlluminationTint(illumination) {
+        const channel = Math.round(GAME_COLOR_CHANNEL_MAX * illumination);
+        return channel * GAME_COLOR_RED_MULTIPLIER
+            + channel * GAME_COLOR_GREEN_MULTIPLIER
+            + channel;
     }
 
     drawFrontWall(cell, lateral, wallWidth, wallHeight, centerY, darkness) {
@@ -419,6 +475,9 @@ class GameScene extends Phaser.Scene {
                     cellWidth,
                     cellHeight
                 );
+                if (visibility[y][x]) {
+                    this.drawMinimapStaircase(level[y][x], x, y, cellWidth, cellHeight);
+                }
             }
         }
 
@@ -431,6 +490,27 @@ class GameScene extends Phaser.Scene {
         );
         this.minimapGraphics.lineStyle(1, GAME_PANEL_BORDER_COLOR);
         this.minimapGraphics.strokeRect(GAME_HUD_X, GAME_MINIMAP_Y, GAME_HUD_WIDTH, GAME_MINIMAP_HEIGHT);
+    }
+
+    drawMinimapStaircase(room, x, y, cellWidth, cellHeight) {
+        const cellX = GAME_HUD_X + x * cellWidth;
+        const cellY = GAME_MINIMAP_Y + y * cellHeight;
+        const centerX = cellX + cellWidth / GAME_CENTER_DIVISOR;
+        if (room === MAZE_STAIRCASE_DOWN) {
+            this.minimapGraphics.fillStyle(GAME_MINIMAP_STAIRCASE_DOWN_COLOR, 1);
+            this.minimapGraphics.fillTriangle(
+                cellX, cellY,
+                cellX + cellWidth, cellY,
+                centerX, cellY + cellHeight
+            );
+        } else if (room === MAZE_STAIRCASE_UP) {
+            this.minimapGraphics.fillStyle(GAME_MINIMAP_STAIRCASE_UP_COLOR, 1);
+            this.minimapGraphics.fillTriangle(
+                centerX, cellY,
+                cellX, cellY + cellHeight,
+                cellX + cellWidth, cellY + cellHeight
+            );
+        }
     }
 
     markVisibleFieldOfView() {
@@ -487,7 +567,13 @@ class GameScene extends Phaser.Scene {
     }
 
     isVisitable(x, y) {
+        return this.getRoom(x, y) !== MAZE_ROOM_WALL;
+    }
+
+    getRoom(x, y) {
         const level = this.maze.levels[this.player.level];
-        return Boolean(level && level[y] && level[y][x] !== MAZE_ROOM_WALL);
+        return level && level[y] && level[y][x] !== undefined
+            ? level[y][x]
+            : MAZE_ROOM_WALL;
     }
 }

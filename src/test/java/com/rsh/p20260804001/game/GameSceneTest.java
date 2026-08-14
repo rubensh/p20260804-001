@@ -53,7 +53,8 @@ class GameSceneTest
     private static final List<String> ASSET_NAMES = List.of(
             "Background001.png", "Background002.png",
             "Wall001.png", "Wall002.png", "Wall003.png",
-            "Wall-Persp001.png", "Wall-Persp002.png", "Wall-Persp003.png");
+            "Wall-Persp001.png", "Wall-Persp002.png", "Wall-Persp003.png",
+            "Stairs-Up.png", "Stairs-Down.png");
 
     /** Cliente HTTP empleado por las pruebas. */
     private HttpClient client;
@@ -268,6 +269,41 @@ class GameSceneTest
         String northMask = maze.substring(northMaskStart, northMaskEnd);
         assertTrue(northMask.contains("[0, 1, 1, 1, 0]"),
                 "La máscara norte no distingue correctamente (+1, -1) de (+2, -1)");
+    }
+
+    /** Comprueba la representación de escaleras en las tres profundidades. */
+    @Test
+    void gameSceneRendersStaircases() throws IOException
+    {
+        String scene = readGameScene();
+
+        assertTrue(scene.contains("GAME_STAIRS_FAR_SCALE = 0.25"));
+        assertTrue(scene.contains("GAME_STAIRS_MIDDLE_SCALE = 0.5"));
+        assertTrue(scene.contains("GAME_STAIRS_NEAR_SCALE = 1.0"));
+        assertTrue(scene.contains("GAME_STAIRS_FAR_VERTICAL_OFFSET = 14"));
+        assertTrue(scene.contains("GAME_STAIRS_MIDDLE_VERTICAL_OFFSET = 2"));
+        assertTrue(scene.contains("GAME_STAIRS_NEAR_VERTICAL_OFFSET = 0"));
+        assertTrue(scene.contains("GAME_STAIRS_FAR_ILLUMINATION = 0.25"));
+        assertTrue(scene.contains("GAME_STAIRS_MIDDLE_ILLUMINATION = 0.5"));
+        assertTrue(scene.contains("GAME_STAIRS_NEAR_ILLUMINATION = 1.0"));
+        assertTrue(scene.contains("staircase.setTint(this.getIlluminationTint(illumination))"));
+        assertTrue(scene.contains("room === MAZE_STAIRCASE_UP ? 'Stairs-Up' : 'Stairs-Down'"));
+        assertTrue(scene.contains("this.fieldOfViewContainer.setMask"));
+    }
+
+    /** Comprueba los símbolos de escaleras visibles en el minimapa. */
+    @Test
+    void gameSceneDrawsStaircasesOnMinimap() throws IOException
+    {
+        String scene = readGameScene();
+
+        assertTrue(scene.contains("GAME_MINIMAP_STAIRCASE_DOWN_COLOR = 0xff0000"));
+        assertTrue(scene.contains("GAME_MINIMAP_STAIRCASE_UP_COLOR = 0x0000ff"));
+        assertTrue(scene.contains("if (visibility[y][x])"));
+        assertTrue(scene.contains("this.drawMinimapStaircase(level[y][x]"));
+        assertTrue(scene.contains("room === MAZE_STAIRCASE_DOWN"));
+        assertTrue(scene.contains("room === MAZE_STAIRCASE_UP"));
+        assertTrue(scene.contains("this.minimapGraphics.fillTriangle"));
     }
 
     /** Comprueba los colores y el jugador del minimapa. */

@@ -268,6 +268,21 @@ class EntityTest
         assertTrue(player.contains("moveBackward()"), "Falta el método moveBackward");
         assertTrue(player.contains("rotateLeft()"), "Falta el método rotateLeft");
         assertTrue(player.contains("rotateRight()"), "Falta el método rotateRight");
+        assertTrue(player.contains("changeLevelForStaircase(room)"),
+                "Falta el cambio de nivel mediante escaleras");
+    }
+
+    /** Comprueba que avanzar sobre una escalera cambia al nivel contiguo. */
+    @Test
+    void playerChangesLevelOnForwardStaircase() throws IOException
+    {
+        String player = Files.readString(PLAYER_JS);
+
+        assertTrue(player.contains("const room = this.getRoom(target.x, target.y)"));
+        assertTrue(player.contains("room === MAZE_STAIRCASE_DOWN"));
+        assertTrue(player.contains("this.level++"));
+        assertTrue(player.contains("room === MAZE_STAIRCASE_UP"));
+        assertTrue(player.contains("this.level--"));
     }
 
     /**

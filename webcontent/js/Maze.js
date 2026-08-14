@@ -132,16 +132,12 @@ class Maze {
             }
         }
 
-        const downStaircase = { x: current.x, y: current.y };
-        let upStaircase;
-        if (currentLevel === MAZE_FIRST_LEVEL) {
-            upStaircase = { x: center.x, y: center.y };
-        } else {
-            upStaircase = { x: start.x, y: start.y };
+        if (currentLevel > MAZE_FIRST_LEVEL) {
+            matrix[start.y][start.x] = MAZE_STAIRCASE_UP;
         }
-
-        matrix[downStaircase.y][downStaircase.x] = MAZE_STAIRCASE_DOWN;
-        matrix[upStaircase.y][upStaircase.x] = MAZE_STAIRCASE_UP;
+        if (currentLevel < this.depth - MAZE_LEVEL_NUMBER_OFFSET) {
+            matrix[current.y][current.x] = MAZE_STAIRCASE_DOWN;
+        }
 
         this.levels[currentLevel] = matrix;
         this.visibility[currentLevel] = visibilityMatrix;

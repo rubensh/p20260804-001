@@ -328,6 +328,18 @@ class MazeTest
         assertTrue(maze.contains("matrix[nextY][nextX] === MAZE_ROOM_WALL"));
     }
 
+    /** Comprueba las excepciones y posiciones de las escaleras por nivel. */
+    @Test
+    void mazePlacesStaircasesForAdjacentLevels() throws IOException
+    {
+        String maze = Files.readString(MAZE_JS);
+
+        assertTrue(maze.contains("currentLevel > MAZE_FIRST_LEVEL"));
+        assertTrue(maze.contains("matrix[start.y][start.x] = MAZE_STAIRCASE_UP"));
+        assertTrue(maze.contains("currentLevel < this.depth - MAZE_LEVEL_NUMBER_OFFSET"));
+        assertTrue(maze.contains("matrix[current.y][current.x] = MAZE_STAIRCASE_DOWN"));
+    }
+
     /**
      * <h2>
      * La clase Maze declara los campos de visión.

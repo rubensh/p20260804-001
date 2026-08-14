@@ -29,8 +29,10 @@ class Player extends Entity {
     moveForward() {
         const target = this.getForwardCell();
         if (this.isVisitable(target.x, target.y)) {
+            const room = this.getRoom(target.x, target.y);
             this.x = target.x;
             this.y = target.y;
+            this.changeLevelForStaircase(room);
         }
     }
 
@@ -96,6 +98,23 @@ class Player extends Entity {
 
     getRandomBetween(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    getRoom(x, y) {
+        const level = this.maze.levels[this.level];
+        if (!level || !level[y]) {
+            return MAZE_ROOM_WALL;
+        }
+        return level[y][x];
+    }
+
+    changeLevelForStaircase(room) {
+        if (room === MAZE_STAIRCASE_DOWN
+            && this.level < this.maze.depth - MAZE_LEVEL_NUMBER_OFFSET) {
+            this.level++;
+        } else if (room === MAZE_STAIRCASE_UP && this.level > MAZE_FIRST_LEVEL) {
+            this.level--;
+        }
     }
 
     isVisitable(x, y) {
