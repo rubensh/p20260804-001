@@ -14,6 +14,11 @@ const MAZE_LEVEL_NUMBER_OFFSET = 1;
 const MAZE_BASE_CORRIDOR_LENGTH = 8;
 const MAZE_CORRIDOR_STEP_MULTIPLIER = 2.0;
 const MAZE_VISITABLE_DEPTH_FACTOR = 0.8;
+const MAZE_ENEMY_LEVEL_OFFSET = 1;
+const MAZE_ENEMY_WEIGHT_EXPONENT = 2;
+const MAZE_ENEMY_ID_OFFSET = 1;
+const MAZE_ENEMY_ID_PREFIX = 'Enemy';
+const MAZE_NO_ENEMIES = 0;
 
 const MAZE_VISION_VISIBLE = 1;
 const MAZE_VISION_RADIUS = 2;
@@ -64,9 +69,13 @@ class Maze {
         this.depth = depth;
         this.levels = [];
         this.visibility = [];
+        this.enemies = [];
+        this.enemyCountsByLevel = [];
     }
 
-    generateMaze() {
+    generateMaze(enemyCount = MAZE_NO_ENEMIES) {
+        this.enemies = [];
+        this.enemyCountsByLevel = this.calculateEnemyCounts(enemyCount);
         for (let currentLevel = MAZE_FIRST_LEVEL; currentLevel < this.depth; currentLevel++) {
             const level = currentLevel;
             const steps = (MAZE_BASE_CORRIDOR_LENGTH - level) * MAZE_CORRIDOR_STEP_MULTIPLIER;
@@ -141,8 +150,64 @@ class Maze {
 
         this.levels[currentLevel] = matrix;
         this.visibility[currentLevel] = visibilityMatrix;
+        this.generateEnemiesForLevel(
+            matrix,
+            currentLevel,
+            this.enemyCountsByLevel[currentLevel]
+        );
 
         return matrix;
+    }
+
+    calculateEnemyCounts(enemyCount) {
+        const weights = [];
+        let totalWeight = MAZE_NO_ENEMIES;
+        for (let level = MAZE_FIRST_LEVEL; level < this.depth; level++) {
+            const weight = Math.pow(level + MAZE_ENEMY_LEVEL_OFFSET, MAZE_ENEMY_WEIGHT_EXPONENT);
+            weights.push(weight);
+            totalWeight += weight;
+        }
+
+        const counts = weights.map(weight => Math.floor(enemyCount * weight / totalWeight));
+        let assignedEnemies = counts.reduce(
+            (total, count) => total + count,
+            MAZE_NO_ENEMIES
+        );
+        let level = this.depth - MAZE_ENEMY_LEVEL_OFFSET;
+        while (assignedEnemies < enemyCount) {
+            counts[level]++;
+            assignedEnemies++;
+            level--;
+            if (level < MAZE_FIRST_LEVEL) {
+                level = this.depth - MAZE_ENEMY_LEVEL_OFFSET;
+            }
+        }
+        return counts;
+    }
+
+    generateEnemiesForLevel(matrix, currentLevel, enemyCount) {
+        const candidates = [];
+        for (let y = MAZE_ENEMY_LEVEL_OFFSET; y < matrix.length - MAZE_ENEMY_LEVEL_OFFSET; y++) {
+            for (let x = MAZE_ENEMY_LEVEL_OFFSET; x < matrix[y].length - MAZE_ENEMY_LEVEL_OFFSET; x++) {
+                if (matrix[y][x] === MAZE_ROOM_EMPTY
+                    && !this.isInitialPlayerPosition(currentLevel, x, y)) {
+                    candidates.push({ x, y });
+                }
+            }
+        }
+
+        const enemiesToCreate = Math.min(enemyCount, candidates.length);
+        for (let enemyIndex = MAZE_NO_ENEMIES; enemyIndex < enemiesToCreate; enemyIndex++) {
+            const candidateIndex = Math.floor(Math.random() * candidates.length);
+            const position = candidates.splice(candidateIndex, MAZE_ENEMY_LEVEL_OFFSET)[0];
+            const id = MAZE_ENEMY_ID_PREFIX + (this.enemies.length + MAZE_ENEMY_ID_OFFSET);
+            this.enemies.push(new Enemy(id, position.x, position.y, currentLevel, this));
+        }
+    }
+
+    isInitialPlayerPosition(currentLevel, x, y) {
+        const center = this.getCenter(this.width, this.height);
+        return currentLevel === MAZE_FIRST_LEVEL && x === center.x && y === center.y;
     }
 
     createLevel(width, height) {

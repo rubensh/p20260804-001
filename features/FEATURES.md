@@ -96,3 +96,10 @@ Nombre: feature-0012
 Descripción: Ubicación de escaleras en niveles.
 Etiquetas: [phaser 3]
 ````
+
+````text
+Feature ID: 0013
+Nombre: feature-0013
+Descripción: Generación de enemigos.
+Etiquetas: [phaser 3]
+````

@@ -1,5 +1,7 @@
 'use strict';
 
+const PLAYER_ALIVE_HEALTH_THRESHOLD = 0;
+
 class Player extends Entity {
 
     constructor(id, x, y, level, maze, facing, health, minDamage, maxDamage, minDefense, maxDefense) {
@@ -122,6 +124,14 @@ class Player extends Entity {
         if (!level || y < 0 || y >= level.length || x < 0 || x >= level[y].length) {
             return false;
         }
-        return level[y][x] !== MAZE_ROOM_WALL;
+        return level[y][x] !== MAZE_ROOM_WALL && !this.isOccupiedByEnemy(x, y);
+    }
+
+    isOccupiedByEnemy(x, y) {
+        const enemies = Array.isArray(this.maze.enemies) ? this.maze.enemies : [];
+        return enemies.some(enemy => enemy.level === this.level
+            && enemy.x === x
+            && enemy.y === y
+            && enemy.health > PLAYER_ALIVE_HEALTH_THRESHOLD);
     }
 }

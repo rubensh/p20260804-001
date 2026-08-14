@@ -54,7 +54,8 @@ class GameSceneTest
             "Background001.png", "Background002.png",
             "Wall001.png", "Wall002.png", "Wall003.png",
             "Wall-Persp001.png", "Wall-Persp002.png", "Wall-Persp003.png",
-            "Stairs-Up.png", "Stairs-Down.png");
+            "Stairs-Up.png", "Stairs-Down.png",
+            "Goblin-001.png", "Goblin-002.png", "Goblin-003.png");
 
     /** Cliente HTTP empleado por las pruebas. */
     private HttpClient client;
@@ -128,6 +129,108 @@ class GameSceneTest
         assertTrue(scene.contains("GAME_PLAYER_FACING_NORTH = 'N'"));
     }
 
+    /** Comprueba la creación del conjunto de enemigos. */
+    @Test
+    void gameSceneCreatesEnemies() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("GAME_ENEMY_COUNT = 200"));
+        assertTrue(scene.contains("this.maze.generateMaze(GAME_ENEMY_COUNT)"));
+        assertTrue(scene.contains("this.enemies = this.maze.enemies"));
+    }
+
+    /** Comprueba el combate por proximidad y la retirada de bajas. */
+    @Test
+    void gameSceneResolvesEnemyCombat() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("resolveCombat()"));
+        assertTrue(scene.contains("this.player.attack(enemyAhead)"));
+        assertTrue(scene.contains("enemy.attack(this.player)"));
+        assertTrue(scene.contains("GAME_ENEMY_ADJACENT_DISTANCE"));
+        assertTrue(scene.contains("removeDeadEnemies()"));
+        assertTrue(scene.contains("this.maze.enemies = this.enemies"));
+    }
+
+    /** Comprueba las reglas de representación de los goblins. */
+    @Test
+    void gameSceneRendersEnemiesInPerspective() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("GAME_ENEMY_FAR_SCALE = 0.25"));
+        assertTrue(scene.contains("GAME_ENEMY_MIDDLE_SCALE = 0.5"));
+        assertTrue(scene.contains("GAME_ENEMY_NEAR_SCALE = 1.0"));
+        assertTrue(scene.contains("GAME_ENEMY_FAR_VERTICAL_OFFSET = -160"));
+        assertTrue(scene.contains("GAME_ENEMY_MIDDLE_VERTICAL_OFFSET = -128"));
+        assertTrue(scene.contains("GAME_ENEMY_NEAR_VERTICAL_OFFSET = -64"));
+        assertTrue(scene.contains("GAME_ENEMY_FAR_ILLUMINATION = 0.25"));
+        assertTrue(scene.contains("GAME_ENEMY_MIDDLE_ILLUMINATION = 0.5"));
+        assertTrue(scene.contains("GAME_ENEMY_NEAR_ILLUMINATION = 1.0"));
+        assertTrue(scene.contains("drawEnemy(cell"));
+        assertTrue(scene.contains("GAME_ENEMY_TEXTURE_PREFIX + enemy.enemyType"));
+    }
+
+    /** Comprueba las paredes extremas en perspectiva de profundidad dos. */
+    @Test
+    void gameSceneRendersMiddleOuterPerspectiveWalls() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("perspectiveDepth === GAME_FOV_MIDDLE_DEPTH"));
+        assertTrue(scene.contains("lateral === -GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS"));
+        assertTrue(scene.contains("lateral === GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS"));
+        assertTrue(scene.contains("GAME_FOV_ALIGN_TO_FIELD_EDGE"));
+        assertTrue(scene.contains("GAME_FOV_OUTER_PERSPECTIVE_OFFSET_FACTOR = 0.5"));
+        assertTrue(scene.contains("outerWallOffsetScale = GAME_FOV_FAR_SCALE"));
+        assertTrue(scene.contains("GAME_FOV_WIDTH * outerWallOffsetScale"));
+        assertTrue(scene.contains("* outerWallOffsetFactor"));
+        assertTrue(scene.contains("perspectiveWidth / 2 + edgeOffset"));
+        assertTrue(scene.contains("GAME_FOV_WIDTH - perspectiveWidth / 2 - edgeOffset"));
+
+        int depthLevel = scene.indexOf("renderDepthLevel(depth");
+        int drawEnemy = scene.indexOf("drawEnemy(cell", depthLevel);
+        String perspectivePass = scene.substring(depthLevel, drawEnemy);
+        assertTrue(perspectivePass.contains("isMiddleOuterWall"));
+        assertTrue(perspectivePass.contains("this.drawPerspectiveWall"),
+                "Las paredes extremas deben dibujarse en el pase de perspectiva de profundidad dos");
+    }
+
+    /** Comprueba las paredes extremas en perspectiva de profundidad uno. */
+    @Test
+    void gameSceneRendersNearOuterPerspectiveWalls() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("GAME_FOV_NEAR_PERSPECTIVE_RADIUS = 2"));
+        assertTrue(scene.contains("perspectiveDepth === GAME_FOV_NEAR_DEPTH"));
+        assertTrue(scene.contains("lateral === -GAME_FOV_NEAR_PERSPECTIVE_RADIUS"));
+        assertTrue(scene.contains("lateral === GAME_FOV_NEAR_PERSPECTIVE_RADIUS"));
+        assertTrue(scene.contains("isNearOuterWall"));
+        assertTrue(scene.contains("? GAME_FOV_MIDDLE_SCALE"));
+        assertTrue(scene.contains(": GAME_FOV_FAR_SCALE"));
+        assertTrue(scene.contains("GAME_FOV_NEAR_OUTER_PERSPECTIVE_OFFSET_FACTOR = 0.25"));
+        assertTrue(scene.contains("? GAME_FOV_NEAR_OUTER_PERSPECTIVE_OFFSET_FACTOR"));
+        assertTrue(scene.contains(": GAME_FOV_OUTER_PERSPECTIVE_OFFSET_FACTOR"));
+        assertTrue(scene.contains("(isMiddleOuterWall || isNearOuterWall)"));
+        assertTrue(scene.contains("shiftTowardCenter = true"));
+        assertTrue(scene.contains("outerWallOffsetScale,"));
+        assertTrue(scene.contains("isMiddleOuterWall"));
+        assertTrue(scene.contains("perspectiveWidth / 2 - edgeOffset"));
+        assertTrue(scene.contains("GAME_FOV_WIDTH - perspectiveWidth / 2 + edgeOffset"));
+    }
+
+    /** Comprueba la transición de Game Over. */
+    @Test
+    void gameSceneHandlesGameOver() throws IOException
+    {
+        String scene = readGameScene();
+        assertTrue(scene.contains("GAME_OVER_DELAY_MILLISECONDS = 5000"));
+        assertTrue(scene.contains("GAME_OVER_TEXT = 'Game Over'"));
+        assertTrue(scene.contains("this.player.health <= GAME_OVER_HEALTH_THRESHOLD"));
+        assertTrue(scene.contains("showGameOver()"));
+        assertTrue(scene.contains("this.gameOver = true"));
+        assertTrue(scene.contains("this.time.delayedCall(GAME_OVER_DELAY_MILLISECONDS"));
+        assertTrue(scene.contains("this.scene.start(GAME_MAIN_MENU_SCENE)"));
+    }
+
     /** Comprueba las áreas del HUD. */
     @Test
     void gameSceneDrawsHud() throws IOException
@@ -161,7 +264,7 @@ class GameSceneTest
         assertTrue(scene.contains("GAME_FOV_NEAR_VERTICAL_OFFSET = 4"));
         assertTrue(scene.contains("GAME_FOV_FAR_PERSPECTIVE_RADIUS = 2"));
         assertTrue(scene.contains("GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS = 2"));
-        assertTrue(scene.contains("GAME_FOV_NEAR_PERSPECTIVE_RADIUS = 1"));
+        assertTrue(scene.contains("GAME_FOV_NEAR_PERSPECTIVE_RADIUS = 2"));
     }
 
     /** Comprueba la selección alterna de fondos. */
@@ -378,6 +481,18 @@ class GameSceneTest
         int game = html.indexOf("../js/scene/GameScene.js");
         int index = html.indexOf("../js/index.js");
         assertTrue(game >= 0 && game < index, "GameScene.js no se carga antes de index.js");
+    }
+
+    /** Comprueba que Enemy se carga después de Entity y antes de GameScene. */
+    @Test
+    void indexHtmlDeclaresEnemy() throws IOException
+    {
+        String html = Files.readString(INDEX_HTML);
+        int entity = html.indexOf("../js/entity/Entity.js");
+        int enemy = html.indexOf("../js/entity/Enemy.js");
+        int game = html.indexOf("../js/scene/GameScene.js");
+        assertTrue(entity >= 0 && enemy > entity && game > enemy,
+                "Enemy.js debe cargarse entre Entity.js y GameScene.js");
     }
 
     /** Comprueba que todos los PNG se sirven y son válidos. */

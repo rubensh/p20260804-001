@@ -554,6 +554,16 @@ class EntityTest
         assertTrue(player.body().contains("class Player extends Entity"));
     }
 
+    /** Comprueba que el jugador no puede atravesar un enemigo vivo. */
+    @Test
+    void playerCannotEnterEnemyCell() throws IOException
+    {
+        String player = Files.readString(PLAYER_JS);
+        assertTrue(player.contains("!this.isOccupiedByEnemy(x, y)"));
+        assertTrue(player.contains("enemy.level === this.level"));
+        assertTrue(player.contains("enemy.health > PLAYER_ALIVE_HEALTH_THRESHOLD"));
+    }
+
     /**
      * <h2>
      * Envía una petición HTTP GET.

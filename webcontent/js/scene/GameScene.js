@@ -8,6 +8,19 @@ const GAME_PLAYER_MIN_DAMAGE = 1;
 const GAME_PLAYER_MAX_DAMAGE = 6;
 const GAME_PLAYER_MIN_DEFENSE = 0;
 const GAME_PLAYER_MAX_DEFENSE = 3;
+const GAME_ENEMY_COUNT = 200;
+const GAME_ENEMY_ALIVE_HEALTH_THRESHOLD = 0;
+const GAME_ENEMY_ADJACENT_DISTANCE = 1;
+const GAME_ENEMY_TEXTURE_PREFIX = 'Goblin-00';
+const GAME_OVER_HEALTH_THRESHOLD = 0;
+const GAME_OVER_DELAY_MILLISECONDS = 5000;
+const GAME_OVER_TEXT = 'Game Over';
+const GAME_OVER_TEXT_COLOR = '#ffffff';
+const GAME_OVER_TEXT_SIZE = '48px';
+const GAME_OVER_FONT_FAMILY = 'Monospace';
+const GAME_OVER_TEXT_DEPTH = 1;
+const GAME_OVER_TEXT_ORIGIN = 0.5;
+const GAME_MAIN_MENU_SCENE = 'MainMenuScene';
 
 const GAME_FOV_X = 10;
 const GAME_FOV_Y = 10;
@@ -27,7 +40,10 @@ const GAME_FOV_MIDDLE_RADIUS = 1;
 const GAME_FOV_NEAR_RADIUS = 0;
 const GAME_FOV_FAR_PERSPECTIVE_RADIUS = 2;
 const GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS = 2;
-const GAME_FOV_NEAR_PERSPECTIVE_RADIUS = 1;
+const GAME_FOV_NEAR_PERSPECTIVE_RADIUS = 2;
+const GAME_FOV_ALIGN_TO_FIELD_EDGE = true;
+const GAME_FOV_OUTER_PERSPECTIVE_OFFSET_FACTOR = 0.5;
+const GAME_FOV_NEAR_OUTER_PERSPECTIVE_OFFSET_FACTOR = 0.25;
 const GAME_FOV_FAR_VERTICAL_OFFSET = 16;
 const GAME_FOV_MIDDLE_VERTICAL_OFFSET = 8;
 const GAME_FOV_NEAR_VERTICAL_OFFSET = 4;
@@ -52,6 +68,15 @@ const GAME_STAIRS_NEAR_VERTICAL_OFFSET = 0;
 const GAME_STAIRS_FAR_ILLUMINATION = 0.25;
 const GAME_STAIRS_MIDDLE_ILLUMINATION = 0.5;
 const GAME_STAIRS_NEAR_ILLUMINATION = 1.0;
+const GAME_ENEMY_FAR_SCALE = 0.25;
+const GAME_ENEMY_MIDDLE_SCALE = 0.5;
+const GAME_ENEMY_NEAR_SCALE = 1.0;
+const GAME_ENEMY_FAR_VERTICAL_OFFSET = -160;
+const GAME_ENEMY_MIDDLE_VERTICAL_OFFSET = -128;
+const GAME_ENEMY_NEAR_VERTICAL_OFFSET = -64;
+const GAME_ENEMY_FAR_ILLUMINATION = 0.25;
+const GAME_ENEMY_MIDDLE_ILLUMINATION = 0.5;
+const GAME_ENEMY_NEAR_ILLUMINATION = 1.0;
 const GAME_COLOR_CHANNEL_MAX = 255;
 const GAME_COLOR_GREEN_MULTIPLIER = 0x100;
 const GAME_COLOR_RED_MULTIPLIER = 0x10000;
@@ -99,7 +124,10 @@ const GAME_ASSETS = [
     { key: 'Wall-Persp002', file: '/assets/images/Wall-Persp002.png' },
     { key: 'Wall-Persp003', file: '/assets/images/Wall-Persp003.png' },
     { key: 'Stairs-Up', file: '/assets/images/Stairs-Up.png' },
-    { key: 'Stairs-Down', file: '/assets/images/Stairs-Down.png' }
+    { key: 'Stairs-Down', file: '/assets/images/Stairs-Down.png' },
+    { key: 'Goblin-001', file: '/assets/images/Goblin-001.png' },
+    { key: 'Goblin-002', file: '/assets/images/Goblin-002.png' },
+    { key: 'Goblin-003', file: '/assets/images/Goblin-003.png' }
 ];
 
 class GameScene extends Phaser.Scene {
@@ -117,7 +145,9 @@ class GameScene extends Phaser.Scene {
     create() {
         this.cameras.main.setBackgroundColor('#000000');
         this.maze = new Maze();
-        this.maze.generateMaze();
+        this.maze.generateMaze(GAME_ENEMY_COUNT);
+        this.enemies = this.maze.enemies;
+        this.gameOver = false;
 
         const center = this.maze.getCenter(this.maze.width, this.maze.height);
         this.player = new Player(
@@ -176,28 +206,82 @@ class GameScene extends Phaser.Scene {
             enabled: true,
             visible: true,
             onClickFunction: () => {
-                this.scene.start('MainMenuScene');
+                this.scene.start(GAME_MAIN_MENU_SCENE);
             }
         });
     }
 
     registerKeyboardControls() {
         this.input.keyboard.on('keydown-UP', () => {
-            this.player.moveForward();
-            this.refreshView();
+            this.performPlayerAction(() => this.player.moveForward());
         });
         this.input.keyboard.on('keydown-DOWN', () => {
-            this.player.moveBackward();
-            this.refreshView();
+            this.performPlayerAction(() => this.player.moveBackward());
         });
         this.input.keyboard.on('keydown-LEFT', () => {
-            this.player.rotateLeft();
-            this.refreshView();
+            this.performPlayerAction(() => this.player.rotateLeft());
         });
         this.input.keyboard.on('keydown-RIGHT', () => {
-            this.player.rotateRight();
-            this.refreshView();
+            this.performPlayerAction(() => this.player.rotateRight());
         });
+    }
+
+    performPlayerAction(action) {
+        if (this.gameOver) {
+            return;
+        }
+        action();
+        this.resolveCombat();
+        this.refreshView();
+        if (this.player.health <= GAME_OVER_HEALTH_THRESHOLD) {
+            this.showGameOver();
+        }
+    }
+
+    showGameOver() {
+        this.gameOver = true;
+        this.gameOverText = this.add.text(
+            this.scale.width / GAME_CENTER_DIVISOR,
+            this.scale.height / GAME_CENTER_DIVISOR,
+            GAME_OVER_TEXT,
+            {
+                fontFamily: GAME_OVER_FONT_FAMILY,
+                fontSize: GAME_OVER_TEXT_SIZE,
+                color: GAME_OVER_TEXT_COLOR
+            }
+        );
+        this.gameOverText.setOrigin(GAME_OVER_TEXT_ORIGIN);
+        this.gameOverText.setDepth(GAME_OVER_TEXT_DEPTH);
+        this.time.delayedCall(GAME_OVER_DELAY_MILLISECONDS, () => {
+            this.scene.start(GAME_MAIN_MENU_SCENE);
+        });
+    }
+
+    resolveCombat() {
+        const target = this.player.getForwardCell();
+        const enemyAhead = this.findEnemyAt(target.x, target.y);
+        if (enemyAhead) {
+            this.player.attack(enemyAhead);
+        }
+        this.removeDeadEnemies();
+        this.enemies
+            .filter(enemy => enemy.level === this.player.level
+                && Math.abs(enemy.x - this.player.x) + Math.abs(enemy.y - this.player.y)
+                    === GAME_ENEMY_ADJACENT_DISTANCE)
+            .forEach(enemy => enemy.attack(this.player));
+    }
+
+    removeDeadEnemies() {
+        this.enemies = this.enemies.filter(
+            enemy => enemy.health > GAME_ENEMY_ALIVE_HEALTH_THRESHOLD
+        );
+        this.maze.enemies = this.enemies;
+    }
+
+    findEnemyAt(x, y) {
+        return this.enemies.find(enemy => enemy.level === this.player.level
+            && enemy.x === x
+            && enemy.y === y);
     }
 
     refreshView() {
@@ -235,10 +319,14 @@ class GameScene extends Phaser.Scene {
             GAME_FOV_FAR_SCALE,
             GAME_FOV_FAR_DARKNESS,
             GAME_FOV_FAR_VERTICAL_OFFSET,
+            GAME_FOV_FAR_DEPTH,
             GAME_FOV_FAR_PERSPECTIVE_RADIUS,
             GAME_STAIRS_FAR_SCALE,
             GAME_STAIRS_FAR_VERTICAL_OFFSET,
-            GAME_STAIRS_FAR_ILLUMINATION
+            GAME_STAIRS_FAR_ILLUMINATION,
+            GAME_ENEMY_FAR_SCALE,
+            GAME_ENEMY_FAR_VERTICAL_OFFSET,
+            GAME_ENEMY_FAR_ILLUMINATION
         );
     }
 
@@ -249,10 +337,14 @@ class GameScene extends Phaser.Scene {
             GAME_FOV_MIDDLE_SCALE,
             GAME_FOV_MIDDLE_DARKNESS,
             GAME_FOV_MIDDLE_VERTICAL_OFFSET,
+            GAME_FOV_MIDDLE_DEPTH,
             GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS,
             GAME_STAIRS_MIDDLE_SCALE,
             GAME_STAIRS_MIDDLE_VERTICAL_OFFSET,
-            GAME_STAIRS_MIDDLE_ILLUMINATION
+            GAME_STAIRS_MIDDLE_ILLUMINATION,
+            GAME_ENEMY_MIDDLE_SCALE,
+            GAME_ENEMY_MIDDLE_VERTICAL_OFFSET,
+            GAME_ENEMY_MIDDLE_ILLUMINATION
         );
     }
 
@@ -263,25 +355,47 @@ class GameScene extends Phaser.Scene {
             GAME_FOV_NEAR_SCALE,
             GAME_FOV_NEAR_DARKNESS,
             GAME_FOV_NEAR_VERTICAL_OFFSET,
+            GAME_FOV_NEAR_DEPTH,
             GAME_FOV_NEAR_PERSPECTIVE_RADIUS,
             GAME_STAIRS_NEAR_SCALE,
             GAME_STAIRS_NEAR_VERTICAL_OFFSET,
-            GAME_STAIRS_NEAR_ILLUMINATION
+            GAME_STAIRS_NEAR_ILLUMINATION,
+            GAME_ENEMY_NEAR_SCALE,
+            GAME_ENEMY_NEAR_VERTICAL_OFFSET,
+            GAME_ENEMY_NEAR_ILLUMINATION
         );
     }
 
-    renderDepthLevel(depth, frontRadius, scale, darkness, verticalOffset, perspectiveRadius,
-        staircaseScale, staircaseVerticalOffset, staircaseIllumination) {
+    renderDepthLevel(depth, frontRadius, scale, darkness, verticalOffset,
+        perspectiveDepth, perspectiveRadius, staircaseScale, staircaseVerticalOffset,
+        staircaseIllumination,
+        enemyScale, enemyVerticalOffset, enemyIllumination) {
         const wallWidth = GAME_FOV_WIDTH * scale;
         const wallHeight = GAME_FOV_HEIGHT * scale;
         const centerY = GAME_FOV_HEIGHT / 2 + verticalOffset;
-        const perspectiveCells = this.getRowInView(depth, perspectiveRadius);
+        const perspectiveCells = this.getRowInView(perspectiveDepth, perspectiveRadius);
         const frontCells = this.getRowInView(depth, frontRadius);
 
         perspectiveCells.forEach((cell, index) => {
             const lateral = index - perspectiveRadius;
             if (lateral !== 0 && !this.isVisitable(cell.x, cell.y)) {
-                this.drawPerspectiveWall(cell, lateral, wallWidth, wallHeight, centerY, darkness);
+                const isMiddleOuterWall = perspectiveDepth === GAME_FOV_MIDDLE_DEPTH
+                    && (lateral === -GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS
+                        || lateral === GAME_FOV_MIDDLE_PERSPECTIVE_RADIUS);
+                const isNearOuterWall = perspectiveDepth === GAME_FOV_NEAR_DEPTH
+                    && (lateral === -GAME_FOV_NEAR_PERSPECTIVE_RADIUS
+                        || lateral === GAME_FOV_NEAR_PERSPECTIVE_RADIUS);
+                const outerWallOffsetScale = isNearOuterWall
+                    ? GAME_FOV_MIDDLE_SCALE
+                    : GAME_FOV_FAR_SCALE;
+                const outerWallOffsetFactor = isNearOuterWall
+                    ? GAME_FOV_NEAR_OUTER_PERSPECTIVE_OFFSET_FACTOR
+                    : GAME_FOV_OUTER_PERSPECTIVE_OFFSET_FACTOR;
+                this.drawPerspectiveWall(cell, lateral, wallWidth, wallHeight, centerY, darkness,
+                    (isMiddleOuterWall || isNearOuterWall) && GAME_FOV_ALIGN_TO_FIELD_EDGE,
+                    outerWallOffsetScale,
+                    isMiddleOuterWall,
+                    outerWallOffsetFactor);
             }
         });
 
@@ -289,6 +403,8 @@ class GameScene extends Phaser.Scene {
             const lateral = index - frontRadius;
             this.drawStaircase(cell, lateral, wallWidth, staircaseScale,
                 staircaseVerticalOffset, staircaseIllumination);
+            this.drawEnemy(cell, lateral, wallWidth, enemyScale,
+                enemyVerticalOffset, enemyIllumination);
         });
 
         frontCells.forEach((cell, index) => {
@@ -297,6 +413,21 @@ class GameScene extends Phaser.Scene {
                 this.drawFrontWall(cell, lateral, wallWidth, wallHeight, centerY, darkness);
             }
         });
+    }
+
+    drawEnemy(cell, lateral, wallWidth, scale, verticalOffset, illumination) {
+        const enemy = this.findEnemyAt(cell.x, cell.y);
+        if (!enemy || enemy.isDead()) {
+            return;
+        }
+        const goblin = this.add.image(
+            GAME_FOV_WIDTH / 2 + lateral * wallWidth,
+            GAME_FOV_HEIGHT + verticalOffset,
+            GAME_ENEMY_TEXTURE_PREFIX + enemy.enemyType
+        );
+        goblin.setScale(scale);
+        goblin.setTint(this.getIlluminationTint(illumination));
+        this.fieldOfViewContainer.add(goblin);
     }
 
     drawStaircase(cell, lateral, wallWidth, staircaseScale, verticalOffset, illumination) {
@@ -336,7 +467,10 @@ class GameScene extends Phaser.Scene {
         this.fieldOfViewContainer.add(wall);
     }
 
-    drawPerspectiveWall(cell, lateral, wallWidth, wallHeight, centerY, darkness) {
+    drawPerspectiveWall(cell, lateral, wallWidth, wallHeight, centerY, darkness,
+        alignToFieldEdge = false, outerWallOffsetScale = GAME_FOV_FAR_SCALE,
+        shiftTowardCenter = true,
+        outerWallOffsetFactor = GAME_FOV_OUTER_PERSPECTIVE_OFFSET_FACTOR) {
         const sourceWidthRatio = GAME_FOV_PERSPECTIVE_SOURCE_WIDTH / GAME_FOV_WALL_SOURCE_SIZE;
         const sourceHeightRatio = GAME_FOV_PERSPECTIVE_SOURCE_HEIGHT / GAME_FOV_WALL_SOURCE_SIZE;
         const perspectiveWidth = wallWidth * sourceWidthRatio * GAME_FOV_PERSPECTIVE_SCALE;
@@ -345,9 +479,19 @@ class GameScene extends Phaser.Scene {
         const frontWallX = GAME_FOV_WIDTH / 2 + lateral * wallWidth;
         const frontWallLeft = frontWallX - wallWidth / 2;
         const frontWallRight = frontWallX + wallWidth / 2;
-        const perspectiveX = isLeft
-            ? frontWallRight + perspectiveWidth / 2
-            : frontWallLeft - perspectiveWidth / 2;
+        const edgeOffset = GAME_FOV_WIDTH * outerWallOffsetScale
+            * outerWallOffsetFactor;
+        const perspectiveX = alignToFieldEdge
+            ? (shiftTowardCenter
+                ? (isLeft
+                    ? perspectiveWidth / 2 + edgeOffset
+                    : GAME_FOV_WIDTH - perspectiveWidth / 2 - edgeOffset)
+                : (isLeft
+                    ? perspectiveWidth / 2 - edgeOffset
+                    : GAME_FOV_WIDTH - perspectiveWidth / 2 + edgeOffset))
+            : (isLeft
+                ? frontWallRight + perspectiveWidth / 2
+                : frontWallLeft - perspectiveWidth / 2);
         const perspectiveWall = this.add.image(perspectiveX, centerY,
             this.selectPerspectiveWall(cell.x, cell.y));
         perspectiveWall.setDisplaySize(perspectiveWidth, perspectiveHeight);

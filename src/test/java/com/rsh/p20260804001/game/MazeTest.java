@@ -397,6 +397,20 @@ class MazeTest
         assertTrue(maze.contains("MAZE_VISION_VISIBLE"), "Falta la marca de celda visible");
     }
 
+    /** Comprueba la generación y el reparto creciente de enemigos. */
+    @Test
+    void mazeGeneratesEnemiesByDepth() throws IOException
+    {
+        String maze = Files.readString(MAZE_JS);
+        assertTrue(maze.contains("this.enemies = []"));
+        assertTrue(maze.contains("calculateEnemyCounts(enemyCount)"));
+        assertTrue(maze.contains("MAZE_ENEMY_WEIGHT_EXPONENT = 2"));
+        assertTrue(maze.contains("generateEnemiesForLevel"));
+        assertTrue(maze.contains("matrix[y][x] === MAZE_ROOM_EMPTY"));
+        assertTrue(maze.contains("candidates.splice"));
+        assertTrue(maze.contains("new Enemy"));
+    }
+
     /**
      * <h2>
      * La clase Maze es servida por el servidor.
