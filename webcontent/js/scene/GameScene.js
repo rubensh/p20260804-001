@@ -12,6 +12,17 @@ const GAME_ENEMY_COUNT = 200;
 const GAME_ENEMY_ALIVE_HEALTH_THRESHOLD = 0;
 const GAME_ENEMY_ADJACENT_DISTANCE = 1;
 const GAME_ENEMY_TEXTURE_PREFIX = 'Goblin-00';
+const GAME_ATTACK_DELAY_MILLISECONDS = 1000;
+const GAME_COMBAT_JITTER_PIXELS = 5;
+const GAME_COMBAT_JITTER_RANGE = GAME_COMBAT_JITTER_PIXELS * 2 + 1;
+const GAME_LOG_MAX_MESSAGES = 5;
+const GAME_LOG_PADDING = 10;
+const GAME_LOG_TEXT_COLOR = '#ffffff';
+const GAME_LOG_TEXT_SIZE = '16px';
+const GAME_LOG_FONT_FAMILY = 'Monospace';
+const GAME_LOG_ENEMY_ATTACK_PREFIX = 'El goblin realiza un ataque con ';
+const GAME_LOG_PLAYER_ATTACK_PREFIX = 'Golpeas al goblin con un ataque de ';
+const GAME_LOG_DAMAGE_SUFFIX = ' de daño';
 const GAME_OVER_HEALTH_THRESHOLD = 0;
 const GAME_OVER_DELAY_MILLISECONDS = 5000;
 const GAME_OVER_TEXT = 'Game Over';
@@ -148,6 +159,8 @@ class GameScene extends Phaser.Scene {
         this.maze.generateMaze(GAME_ENEMY_COUNT);
         this.enemies = this.maze.enemies;
         this.gameOver = false;
+        this.combatMessages = [];
+        this.playerAttackTargetId = null;
 
         const center = this.maze.getCenter(this.maze.width, this.maze.height);
         this.player = new Player(
@@ -167,6 +180,8 @@ class GameScene extends Phaser.Scene {
         this.createHud();
         this.registerKeyboardControls();
         this.refreshView();
+        this.resolveCombat();
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.stopCombatIntervals());
     }
 
     createHud() {
@@ -184,6 +199,17 @@ class GameScene extends Phaser.Scene {
         this.logGraphics.fillRect(GAME_LOG_X, GAME_LOG_Y, GAME_LOG_WIDTH, GAME_LOG_HEIGHT);
         this.logGraphics.lineStyle(1, GAME_PANEL_BORDER_COLOR);
         this.logGraphics.strokeRect(GAME_LOG_X, GAME_LOG_Y, GAME_LOG_WIDTH, GAME_LOG_HEIGHT);
+        this.logText = this.add.text(
+            GAME_LOG_X + GAME_LOG_PADDING,
+            GAME_LOG_Y + GAME_LOG_PADDING,
+            '',
+            {
+                fontFamily: GAME_LOG_FONT_FAMILY,
+                fontSize: GAME_LOG_TEXT_SIZE,
+                color: GAME_LOG_TEXT_COLOR,
+                wordWrap: { width: GAME_LOG_WIDTH - GAME_LOG_PADDING * 2 }
+            }
+        );
 
         this.levelLabel = this.add.text(GAME_LEVEL_LABEL_X, GAME_LEVEL_LABEL_Y, '', {
             fontFamily: 'Monospace',
@@ -239,7 +265,11 @@ class GameScene extends Phaser.Scene {
     }
 
     showGameOver() {
+        if (this.gameOver) {
+            return;
+        }
         this.gameOver = true;
+        this.stopCombatIntervals();
         this.gameOverText = this.add.text(
             this.scale.width / GAME_CENTER_DIVISOR,
             this.scale.height / GAME_CENTER_DIVISOR,
@@ -258,20 +288,114 @@ class GameScene extends Phaser.Scene {
     }
 
     resolveCombat() {
+        this.synchronizeCombatIntervals();
+    }
+
+    synchronizeCombatIntervals() {
+        if (this.gameOver) {
+            this.stopCombatIntervals();
+            return;
+        }
+
         const target = this.player.getForwardCell();
         const enemyAhead = this.findEnemyAt(target.x, target.y);
-        if (enemyAhead) {
-            this.player.attack(enemyAhead);
+        const targetChanged = enemyAhead
+            ? this.playerAttackTargetId !== enemyAhead.id
+            : this.playerAttackTargetId !== null;
+        if (targetChanged) {
+            this.stopPlayerCombat();
         }
+        if (enemyAhead && this.player.attackInterval === null) {
+            this.playerAttackTargetId = enemyAhead.id;
+            this.player.attackInterval = setInterval(
+                () => this.executePlayerAttack(enemyAhead),
+                this.player.attackDelay * GAME_ATTACK_DELAY_MILLISECONDS
+            );
+        }
+
+        this.enemies.forEach(enemy => {
+            if (this.isEnemyAdjacent(enemy)) {
+                if (enemy.attackInterval === null) {
+                    enemy.attackInterval = setInterval(
+                        () => this.executeEnemyAttack(enemy),
+                        enemy.attackDelay * GAME_ATTACK_DELAY_MILLISECONDS
+                    );
+                }
+            } else {
+                this.stopEnemyCombat(enemy);
+            }
+        });
+    }
+
+    executePlayerAttack(enemyAhead) {
+        const target = this.player.getForwardCell();
+        if (this.gameOver || enemyAhead.isDead()
+            || enemyAhead.level !== this.player.level
+            || enemyAhead.x !== target.x || enemyAhead.y !== target.y) {
+            this.synchronizeCombatIntervals();
+            return;
+        }
+
+        const damage = this.player.attack(enemyAhead);
+        this.addCombatLog(GAME_LOG_PLAYER_ATTACK_PREFIX + damage + GAME_LOG_DAMAGE_SUFFIX);
         this.removeDeadEnemies();
-        this.enemies
-            .filter(enemy => enemy.level === this.player.level
-                && Math.abs(enemy.x - this.player.x) + Math.abs(enemy.y - this.player.y)
-                    === GAME_ENEMY_ADJACENT_DISTANCE)
-            .forEach(enemy => enemy.attack(this.player));
+        this.synchronizeCombatIntervals();
+        this.refreshView();
+    }
+
+    executeEnemyAttack(enemy) {
+        if (this.gameOver || !this.isEnemyAdjacent(enemy)) {
+            this.stopEnemyCombat(enemy);
+            return;
+        }
+
+        const damage = enemy.attack(this.player);
+        this.addCombatLog(GAME_LOG_ENEMY_ATTACK_PREFIX + damage + GAME_LOG_DAMAGE_SUFFIX);
+        this.refreshView();
+        if (this.player.health <= GAME_OVER_HEALTH_THRESHOLD) {
+            this.showGameOver();
+        }
+    }
+
+    isEnemyAdjacent(enemy) {
+        return !enemy.isDead()
+            && enemy.level === this.player.level
+            && Math.abs(enemy.x - this.player.x) + Math.abs(enemy.y - this.player.y)
+                === GAME_ENEMY_ADJACENT_DISTANCE;
+    }
+
+    stopPlayerCombat() {
+        if (this.player && this.player.attackInterval !== null) {
+            clearInterval(this.player.attackInterval);
+            this.player.attackInterval = null;
+        }
+        this.playerAttackTargetId = null;
+    }
+
+    stopEnemyCombat(enemy) {
+        if (enemy.attackInterval !== null) {
+            clearInterval(enemy.attackInterval);
+            enemy.attackInterval = null;
+        }
+    }
+
+    stopCombatIntervals() {
+        this.stopPlayerCombat();
+        if (Array.isArray(this.enemies)) {
+            this.enemies.forEach(enemy => this.stopEnemyCombat(enemy));
+        }
+    }
+
+    addCombatLog(message) {
+        this.combatMessages.push(message);
+        this.combatMessages = this.combatMessages.slice(-GAME_LOG_MAX_MESSAGES);
+        this.logText.setText(this.combatMessages.join('\n'));
     }
 
     removeDeadEnemies() {
+        this.enemies
+            .filter(enemy => enemy.health <= GAME_ENEMY_ALIVE_HEALTH_THRESHOLD)
+            .forEach(enemy => this.stopEnemyCombat(enemy));
         this.enemies = this.enemies.filter(
             enemy => enemy.health > GAME_ENEMY_ALIVE_HEALTH_THRESHOLD
         );
@@ -420,14 +544,24 @@ class GameScene extends Phaser.Scene {
         if (!enemy || enemy.isDead()) {
             return;
         }
+        const jitterX = this.getEnemyCombatJitter(enemy);
+        const jitterY = this.getEnemyCombatJitter(enemy);
         const goblin = this.add.image(
-            GAME_FOV_WIDTH / 2 + lateral * wallWidth,
-            GAME_FOV_HEIGHT + verticalOffset,
+            GAME_FOV_WIDTH / 2 + lateral * wallWidth + jitterX,
+            GAME_FOV_HEIGHT + verticalOffset + jitterY,
             GAME_ENEMY_TEXTURE_PREFIX + enemy.enemyType
         );
         goblin.setScale(scale);
         goblin.setTint(this.getIlluminationTint(illumination));
         this.fieldOfViewContainer.add(goblin);
+    }
+
+    getEnemyCombatJitter(enemy) {
+        if (enemy.attackInterval === null) {
+            return 0;
+        }
+        return Math.floor(Math.random() * GAME_COMBAT_JITTER_RANGE)
+            - GAME_COMBAT_JITTER_PIXELS;
     }
 
     drawStaircase(cell, lateral, wallWidth, staircaseScale, verticalOffset, illumination) {

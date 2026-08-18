@@ -103,3 +103,10 @@ Nombre: feature-0013
 Descripción: Generación de enemigos.
 Etiquetas: [phaser 3]
 ````
+
+````text
+Feature ID: 0014
+Nombre: feature-0014
+Descripción: Dinámica de combates.
+Etiquetas: [phaser 3]
+````

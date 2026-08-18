@@ -1,6 +1,7 @@
 'use strict';
 
 const PLAYER_ALIVE_HEALTH_THRESHOLD = 0;
+const PLAYER_ATTACK_DELAY_SECONDS = 1;
 
 class Player extends Entity {
 
@@ -13,11 +14,14 @@ class Player extends Entity {
         this.maxDamage = maxDamage;
         this.minDefense = minDefense;
         this.maxDefense = maxDefense;
+        this.attackDelay = PLAYER_ATTACK_DELAY_SECONDS;
+        this.attackInterval = null;
     }
 
     attack(entity) {
         const damage = this.getRandomBetween(this.minDamage, this.maxDamage);
         entity.defend(damage);
+        return damage;
     }
 
     defend(damage) {

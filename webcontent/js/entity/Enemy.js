@@ -30,11 +30,13 @@ class Enemy extends Entity {
         this.minDefense = levelFactor * ENEMY_MIN_DEFENSE_LEVEL_FACTOR;
         this.maxDefense = levelFactor * ENEMY_MAX_DEFENSE_LEVEL_FACTOR;
         this.attackDelay = this.enemyType * ENEMY_ATTACK_DELAY_FACTOR - ENEMY_ATTACK_DELAY_OFFSET;
+        this.attackInterval = null;
     }
 
     attack(player) {
         const damage = this.getRandomBetween(this.minDamage, this.maxDamage);
         player.defend(damage);
+        return damage;
     }
 
     defend(damage) {
