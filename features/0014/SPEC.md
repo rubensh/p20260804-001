@@ -11,8 +11,8 @@ Dotar de movimiento a los enemigos para simular cierto dinamismo y hacer que los
 # Estado
 
 - [X]En proceso.
-- [ ]En pruebas.
-- [ ]Finalizado.
+- [X]En pruebas.
+- [X]Finalizado.
 
 
 # Notas
