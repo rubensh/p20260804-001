@@ -138,9 +138,16 @@ class Player extends Entity {
 
     isOccupiedByEnemy(x, y) {
         const enemies = Array.isArray(this.maze.enemies) ? this.maze.enemies : [];
-        return enemies.some(enemy => enemy.level === this.level
+        const occupiedByRegularEnemy = enemies.some(enemy => enemy.level === this.level
             && enemy.x === x
             && enemy.y === y
             && enemy.health > PLAYER_ALIVE_HEALTH_THRESHOLD);
+        const boss = this.maze.boss;
+        const occupiedByBoss = boss !== null && boss !== undefined
+            && boss.level === this.level
+            && boss.x === x
+            && boss.y === y
+            && boss.health > PLAYER_ALIVE_HEALTH_THRESHOLD;
+        return occupiedByRegularEnemy || occupiedByBoss;
     }
 }

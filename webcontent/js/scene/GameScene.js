@@ -12,6 +12,7 @@ const GAME_ENEMY_COUNT = 200;
 const GAME_ENEMY_ALIVE_HEALTH_THRESHOLD = 0;
 const GAME_ENEMY_ADJACENT_DISTANCE = 1;
 const GAME_ENEMY_TEXTURE_PREFIX = 'Goblin-00';
+const GAME_BOSS_TEXTURE = 'Orc-001';
 const GAME_POTION_TEXTURE = 'Potion001';
 const GAME_POTION_FAR_SCALE = 0.25;
 const GAME_POTION_MIDDLE_SCALE = 0.5;
@@ -32,6 +33,8 @@ const GAME_LOG_TEXT_SIZE = '16px';
 const GAME_LOG_FONT_FAMILY = 'Monospace';
 const GAME_LOG_ENEMY_ATTACK_PREFIX = 'El goblin realiza un ataque con ';
 const GAME_LOG_PLAYER_ATTACK_PREFIX = 'Golpeas al goblin con un ataque de ';
+const GAME_LOG_BOSS_ATTACK_PREFIX = 'El orco realiza un ataque con ';
+const GAME_LOG_PLAYER_BOSS_ATTACK_PREFIX = 'Golpeas al orco con un ataque de ';
 const GAME_LOG_DAMAGE_SUFFIX = ' de daño';
 const GAME_OVER_HEALTH_THRESHOLD = 0;
 const GAME_OVER_DELAY_MILLISECONDS = 5000;
@@ -42,6 +45,8 @@ const GAME_OVER_FONT_FAMILY = 'Monospace';
 const GAME_OVER_TEXT_DEPTH = 1;
 const GAME_OVER_TEXT_ORIGIN = 0.5;
 const GAME_MAIN_MENU_SCENE = 'MainMenuScene';
+const GAME_VICTORY_DELAY_MILLISECONDS = 5000;
+const GAME_VICTORY_TEXT = 'You win!!!';
 
 const GAME_FOV_X = 10;
 const GAME_FOV_Y = 10;
@@ -98,6 +103,15 @@ const GAME_ENEMY_NEAR_VERTICAL_OFFSET = -64;
 const GAME_ENEMY_FAR_ILLUMINATION = 0.25;
 const GAME_ENEMY_MIDDLE_ILLUMINATION = 0.5;
 const GAME_ENEMY_NEAR_ILLUMINATION = 1.0;
+const GAME_BOSS_FAR_SCALE = 0.25;
+const GAME_BOSS_MIDDLE_SCALE = 0.5;
+const GAME_BOSS_NEAR_SCALE = 1.0;
+const GAME_BOSS_FAR_VERTICAL_OFFSET = -160;
+const GAME_BOSS_MIDDLE_VERTICAL_OFFSET = -128;
+const GAME_BOSS_NEAR_VERTICAL_OFFSET = -64;
+const GAME_BOSS_FAR_ILLUMINATION = 0.25;
+const GAME_BOSS_MIDDLE_ILLUMINATION = 0.5;
+const GAME_BOSS_NEAR_ILLUMINATION = 1.0;
 const GAME_COLOR_CHANNEL_MAX = 255;
 const GAME_COLOR_GREEN_MULTIPLIER = 0x100;
 const GAME_COLOR_RED_MULTIPLIER = 0x10000;
@@ -149,6 +163,7 @@ const GAME_ASSETS = [
     { key: 'Goblin-001', file: '/assets/images/Goblin-001.png' },
     { key: 'Goblin-002', file: '/assets/images/Goblin-002.png' },
     { key: 'Goblin-003', file: '/assets/images/Goblin-003.png' },
+    { key: GAME_BOSS_TEXTURE, file: '/assets/images/Orc-001.png' },
     { key: GAME_POTION_TEXTURE, file: '/assets/images/Potion001.png' }
 ];
 
@@ -169,6 +184,7 @@ class GameScene extends Phaser.Scene {
         this.maze = new Maze();
         this.maze.generateMaze(GAME_ENEMY_COUNT);
         this.enemies = this.maze.enemies;
+        this.boss = this.maze.boss;
         this.potions = this.maze.potions;
         this.gameOver = false;
         this.combatMessages = [];
@@ -300,6 +316,29 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    showVictory() {
+        if (this.gameOver) {
+            return;
+        }
+        this.gameOver = true;
+        this.stopCombatIntervals();
+        this.victoryText = this.add.text(
+            this.scale.width / GAME_CENTER_DIVISOR,
+            this.scale.height / GAME_CENTER_DIVISOR,
+            GAME_VICTORY_TEXT,
+            {
+                fontFamily: GAME_OVER_FONT_FAMILY,
+                fontSize: GAME_OVER_TEXT_SIZE,
+                color: GAME_OVER_TEXT_COLOR
+            }
+        );
+        this.victoryText.setOrigin(GAME_OVER_TEXT_ORIGIN);
+        this.victoryText.setDepth(GAME_OVER_TEXT_DEPTH);
+        this.time.delayedCall(GAME_VICTORY_DELAY_MILLISECONDS, () => {
+            this.scene.start(GAME_MAIN_MENU_SCENE);
+        });
+    }
+
     resolveCombat() {
         this.synchronizeCombatIntervals();
     }
@@ -311,7 +350,7 @@ class GameScene extends Phaser.Scene {
         }
 
         const target = this.player.getForwardCell();
-        const enemyAhead = this.findEnemyAt(target.x, target.y);
+        const enemyAhead = this.findOpponentAt(target.x, target.y);
         const targetChanged = enemyAhead
             ? this.playerAttackTargetId !== enemyAhead.id
             : this.playerAttackTargetId !== null;
@@ -338,6 +377,18 @@ class GameScene extends Phaser.Scene {
                 this.stopEnemyCombat(enemy);
             }
         });
+        if (this.boss !== null) {
+            if (this.isEnemyAdjacent(this.boss)) {
+                if (this.boss.attackInterval === null) {
+                    this.boss.attackInterval = setInterval(
+                        () => this.executeEnemyAttack(this.boss),
+                        this.boss.attackDelay * GAME_ATTACK_DELAY_MILLISECONDS
+                    );
+                }
+            } else {
+                this.stopEnemyCombat(this.boss);
+            }
+        }
     }
 
     executePlayerAttack(enemyAhead) {
@@ -350,7 +401,10 @@ class GameScene extends Phaser.Scene {
         }
 
         const damage = this.player.attack(enemyAhead);
-        this.addCombatLog(GAME_LOG_PLAYER_ATTACK_PREFIX + damage + GAME_LOG_DAMAGE_SUFFIX);
+        const attackPrefix = this.isBoss(enemyAhead)
+            ? GAME_LOG_PLAYER_BOSS_ATTACK_PREFIX
+            : GAME_LOG_PLAYER_ATTACK_PREFIX;
+        this.addCombatLog(attackPrefix + damage + GAME_LOG_DAMAGE_SUFFIX);
         this.removeDeadEnemies();
         this.synchronizeCombatIntervals();
         this.refreshView();
@@ -363,7 +417,10 @@ class GameScene extends Phaser.Scene {
         }
 
         const damage = enemy.attack(this.player);
-        this.addCombatLog(GAME_LOG_ENEMY_ATTACK_PREFIX + damage + GAME_LOG_DAMAGE_SUFFIX);
+        const attackPrefix = this.isBoss(enemy)
+            ? GAME_LOG_BOSS_ATTACK_PREFIX
+            : GAME_LOG_ENEMY_ATTACK_PREFIX;
+        this.addCombatLog(attackPrefix + damage + GAME_LOG_DAMAGE_SUFFIX);
         this.refreshView();
         if (this.player.health <= GAME_OVER_HEALTH_THRESHOLD) {
             this.showGameOver();
@@ -375,6 +432,10 @@ class GameScene extends Phaser.Scene {
             && enemy.level === this.player.level
             && Math.abs(enemy.x - this.player.x) + Math.abs(enemy.y - this.player.y)
                 === GAME_ENEMY_ADJACENT_DISTANCE;
+    }
+
+    isBoss(enemy) {
+        return this.boss !== null && enemy === this.boss;
     }
 
     stopPlayerCombat() {
@@ -397,6 +458,9 @@ class GameScene extends Phaser.Scene {
         if (Array.isArray(this.enemies)) {
             this.enemies.forEach(enemy => this.stopEnemyCombat(enemy));
         }
+        if (this.boss !== null && this.boss !== undefined) {
+            this.stopEnemyCombat(this.boss);
+        }
     }
 
     addCombatLog(message) {
@@ -413,12 +477,31 @@ class GameScene extends Phaser.Scene {
             enemy => enemy.health > GAME_ENEMY_ALIVE_HEALTH_THRESHOLD
         );
         this.maze.enemies = this.enemies;
+        if (this.boss !== null && this.boss.health <= GAME_ENEMY_ALIVE_HEALTH_THRESHOLD) {
+            this.stopEnemyCombat(this.boss);
+            this.boss = null;
+            this.maze.boss = null;
+            this.showVictory();
+        }
     }
 
     findEnemyAt(x, y) {
         return this.enemies.find(enemy => enemy.level === this.player.level
             && enemy.x === x
             && enemy.y === y);
+    }
+
+    findOpponentAt(x, y) {
+        const enemy = this.findEnemyAt(x, y);
+        if (enemy) {
+            return enemy;
+        }
+        return this.boss !== null
+            && this.boss.level === this.player.level
+            && this.boss.x === x
+            && this.boss.y === y
+            ? this.boss
+            : undefined;
     }
 
     findPotionAt(x, y) {
@@ -480,7 +563,10 @@ class GameScene extends Phaser.Scene {
             GAME_ENEMY_FAR_ILLUMINATION,
             GAME_POTION_FAR_SCALE,
             GAME_POTION_FAR_VERTICAL_OFFSET,
-            GAME_POTION_FAR_ILLUMINATION
+            GAME_POTION_FAR_ILLUMINATION,
+            GAME_BOSS_FAR_SCALE,
+            GAME_BOSS_FAR_VERTICAL_OFFSET,
+            GAME_BOSS_FAR_ILLUMINATION
         );
     }
 
@@ -501,7 +587,10 @@ class GameScene extends Phaser.Scene {
             GAME_ENEMY_MIDDLE_ILLUMINATION,
             GAME_POTION_MIDDLE_SCALE,
             GAME_POTION_MIDDLE_VERTICAL_OFFSET,
-            GAME_POTION_MIDDLE_ILLUMINATION
+            GAME_POTION_MIDDLE_ILLUMINATION,
+            GAME_BOSS_MIDDLE_SCALE,
+            GAME_BOSS_MIDDLE_VERTICAL_OFFSET,
+            GAME_BOSS_MIDDLE_ILLUMINATION
         );
     }
 
@@ -522,7 +611,10 @@ class GameScene extends Phaser.Scene {
             GAME_ENEMY_NEAR_ILLUMINATION,
             GAME_POTION_NEAR_SCALE,
             GAME_POTION_NEAR_VERTICAL_OFFSET,
-            GAME_POTION_NEAR_ILLUMINATION
+            GAME_POTION_NEAR_ILLUMINATION,
+            GAME_BOSS_NEAR_SCALE,
+            GAME_BOSS_NEAR_VERTICAL_OFFSET,
+            GAME_BOSS_NEAR_ILLUMINATION
         );
     }
 
@@ -530,7 +622,8 @@ class GameScene extends Phaser.Scene {
         perspectiveDepth, perspectiveRadius, staircaseScale, staircaseVerticalOffset,
         staircaseIllumination,
         enemyScale, enemyVerticalOffset, enemyIllumination,
-        potionScale, potionVerticalOffset, potionIllumination) {
+        potionScale, potionVerticalOffset, potionIllumination,
+        bossScale, bossVerticalOffset, bossIllumination) {
         const wallWidth = GAME_FOV_WIDTH * scale;
         const wallHeight = GAME_FOV_HEIGHT * scale;
         const centerY = GAME_FOV_HEIGHT / 2 + verticalOffset;
@@ -568,6 +661,8 @@ class GameScene extends Phaser.Scene {
                 potionVerticalOffset, potionIllumination);
             this.drawEnemy(cell, lateral, wallWidth, enemyScale,
                 enemyVerticalOffset, enemyIllumination);
+            this.drawBoss(cell, lateral, wallWidth, bossScale,
+                bossVerticalOffset, bossIllumination);
         });
 
         frontCells.forEach((cell, index) => {
@@ -593,6 +688,24 @@ class GameScene extends Phaser.Scene {
         goblin.setScale(scale);
         goblin.setTint(this.getIlluminationTint(illumination));
         this.fieldOfViewContainer.add(goblin);
+    }
+
+    drawBoss(cell, lateral, wallWidth, scale, verticalOffset, illumination) {
+        if (this.boss === null || this.boss.isDead()
+            || this.boss.level !== this.player.level
+            || this.boss.x !== cell.x || this.boss.y !== cell.y) {
+            return;
+        }
+        const jitterX = this.getEnemyCombatJitter(this.boss);
+        const jitterY = this.getEnemyCombatJitter(this.boss);
+        const orc = this.add.image(
+            GAME_FOV_WIDTH / GAME_CENTER_DIVISOR + lateral * wallWidth + jitterX,
+            GAME_FOV_HEIGHT + verticalOffset + jitterY,
+            GAME_BOSS_TEXTURE
+        );
+        orc.setScale(scale);
+        orc.setTint(this.getIlluminationTint(illumination));
+        this.fieldOfViewContainer.add(orc);
     }
 
     getEnemyCombatJitter(enemy) {

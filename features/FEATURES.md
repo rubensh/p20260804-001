@@ -117,3 +117,10 @@ Nombre: feature-0015
 Descripción: Creación de powerups.
 Etiquetas: [phaser 3]
 ````
+
+````text
+Feature ID: 0016
+Nombre: feature-0016
+Descripción: Implementación de enemigo final.
+Etiquetas: [phaser 3]
+````

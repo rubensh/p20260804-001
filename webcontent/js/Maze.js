@@ -22,6 +22,7 @@ const MAZE_NO_ENEMIES = 0;
 const MAZE_POTIONS_PER_LEVEL = 5;
 const MAZE_POTION_ID_OFFSET = 1;
 const MAZE_POTION_ID_PREFIX = 'Potion';
+const MAZE_BOSS_ID = 'Boss001';
 
 const MAZE_VISION_VISIBLE = 1;
 const MAZE_VISION_RADIUS = 2;
@@ -75,11 +76,13 @@ class Maze {
         this.enemies = [];
         this.enemyCountsByLevel = [];
         this.potions = [];
+        this.boss = null;
     }
 
     generateMaze(enemyCount = MAZE_NO_ENEMIES) {
         this.enemies = [];
         this.potions = [];
+        this.boss = null;
         this.enemyCountsByLevel = this.calculateEnemyCounts(enemyCount);
         for (let currentLevel = MAZE_FIRST_LEVEL; currentLevel < this.depth; currentLevel++) {
             const level = currentLevel;
@@ -160,6 +163,7 @@ class Maze {
             currentLevel,
             this.enemyCountsByLevel[currentLevel]
         );
+        this.generateBossForLevel(matrix, currentLevel);
         this.generatePotionsForLevel(matrix, currentLevel);
 
         return matrix;
@@ -236,9 +240,43 @@ class Maze {
         }
     }
 
+    generateBossForLevel(matrix, currentLevel) {
+        const lastLevel = this.depth - MAZE_LEVEL_NUMBER_OFFSET;
+        if (currentLevel !== lastLevel || this.boss !== null) {
+            return;
+        }
+
+        const candidates = [];
+        for (let y = MAZE_LEVEL_NUMBER_OFFSET;
+            y < matrix.length - MAZE_LEVEL_NUMBER_OFFSET;
+            y++) {
+            for (let x = MAZE_LEVEL_NUMBER_OFFSET;
+                x < matrix[y].length - MAZE_LEVEL_NUMBER_OFFSET;
+                x++) {
+                if (matrix[y][x] === MAZE_ROOM_EMPTY
+                    && !this.isOccupiedByEnemy(currentLevel, x, y)) {
+                    candidates.push({ x, y });
+                }
+            }
+        }
+
+        if (candidates.length === 0) {
+            return;
+        }
+        const candidateIndex = Math.floor(Math.random() * candidates.length);
+        const position = candidates[candidateIndex];
+        this.boss = new Boss(MAZE_BOSS_ID, position.x, position.y, currentLevel, this);
+    }
+
     isOccupiedByEnemy(currentLevel, x, y) {
-        return this.enemies.some(enemy => enemy.level === currentLevel
+        const occupiedByRegularEnemy = this.enemies.some(enemy => enemy.level === currentLevel
             && enemy.x === x && enemy.y === y);
+        const occupiedByBoss = this.boss !== null
+            && this.boss.level === currentLevel
+            && this.boss.x === x
+            && this.boss.y === y
+            && !this.boss.isDead();
+        return occupiedByRegularEnemy || occupiedByBoss;
     }
 
     isInitialPlayerPosition(currentLevel, x, y) {
