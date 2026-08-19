@@ -124,3 +124,10 @@ Nombre: feature-0016
 Descripción: Implementación de enemigo final.
 Etiquetas: [phaser 3]
 ````
+
+````text
+Feature ID: 0017
+Nombre: feature-0017
+Descripción: Cambios finales.
+Etiquetas: [frontend][html][css][js][phaser 3]
+````
