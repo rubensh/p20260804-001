@@ -98,17 +98,24 @@ class PowerupTest
         assertTrue(scene.contains("this.maze.potions = this.potions"));
     }
 
-    /** Comprueba la precarga y la posición visual solicitadas. */
+    /** Comprueba la precarga y las reglas visuales por distancia. */
     @Test
     void gameSceneRendersPotionBelowViewCenter() throws IOException
     {
         String scene = Files.readString(GAME_SCENE_JS);
 
         assertTrue(scene.contains("Potion001.png"));
-        assertTrue(scene.contains("GAME_POTION_VERTICAL_OFFSET = 30"));
-        assertTrue(scene.contains("GAME_FOV_HEIGHT / GAME_CENTER_DIVISOR"
-                + " + GAME_POTION_VERTICAL_OFFSET"));
+        assertTrue(scene.contains("GAME_POTION_FAR_SCALE = 0.25"));
+        assertTrue(scene.contains("GAME_POTION_MIDDLE_SCALE = 0.5"));
+        assertTrue(scene.contains("GAME_POTION_NEAR_SCALE = 1.0"));
+        assertTrue(scene.contains("GAME_POTION_FAR_VERTICAL_OFFSET = 60"));
+        assertTrue(scene.contains("GAME_POTION_MIDDLE_VERTICAL_OFFSET = 80"));
+        assertTrue(scene.contains("GAME_POTION_NEAR_VERTICAL_OFFSET = 100"));
+        assertTrue(scene.contains("GAME_POTION_FAR_ILLUMINATION = 0.5"));
+        assertTrue(scene.contains("GAME_POTION_MIDDLE_ILLUMINATION = 0.8"));
+        assertTrue(scene.contains("GAME_POTION_NEAR_ILLUMINATION = 1.0"));
         assertTrue(scene.contains("drawPotion(cell"));
+        assertTrue(scene.contains("image.setTint(this.getIlluminationTint(illumination))"));
     }
 
     /** Comprueba que la página carga la clase Potion. */

@@ -13,7 +13,15 @@ const GAME_ENEMY_ALIVE_HEALTH_THRESHOLD = 0;
 const GAME_ENEMY_ADJACENT_DISTANCE = 1;
 const GAME_ENEMY_TEXTURE_PREFIX = 'Goblin-00';
 const GAME_POTION_TEXTURE = 'Potion001';
-const GAME_POTION_VERTICAL_OFFSET = 30;
+const GAME_POTION_FAR_SCALE = 0.25;
+const GAME_POTION_MIDDLE_SCALE = 0.5;
+const GAME_POTION_NEAR_SCALE = 1.0;
+const GAME_POTION_FAR_VERTICAL_OFFSET = 60;
+const GAME_POTION_MIDDLE_VERTICAL_OFFSET = 80;
+const GAME_POTION_NEAR_VERTICAL_OFFSET = 100;
+const GAME_POTION_FAR_ILLUMINATION = 0.5;
+const GAME_POTION_MIDDLE_ILLUMINATION = 0.8;
+const GAME_POTION_NEAR_ILLUMINATION = 1.0;
 const GAME_ATTACK_DELAY_MILLISECONDS = 1000;
 const GAME_COMBAT_JITTER_PIXELS = 5;
 const GAME_COMBAT_JITTER_RANGE = GAME_COMBAT_JITTER_PIXELS * 2 + 1;
@@ -469,7 +477,10 @@ class GameScene extends Phaser.Scene {
             GAME_STAIRS_FAR_ILLUMINATION,
             GAME_ENEMY_FAR_SCALE,
             GAME_ENEMY_FAR_VERTICAL_OFFSET,
-            GAME_ENEMY_FAR_ILLUMINATION
+            GAME_ENEMY_FAR_ILLUMINATION,
+            GAME_POTION_FAR_SCALE,
+            GAME_POTION_FAR_VERTICAL_OFFSET,
+            GAME_POTION_FAR_ILLUMINATION
         );
     }
 
@@ -487,7 +498,10 @@ class GameScene extends Phaser.Scene {
             GAME_STAIRS_MIDDLE_ILLUMINATION,
             GAME_ENEMY_MIDDLE_SCALE,
             GAME_ENEMY_MIDDLE_VERTICAL_OFFSET,
-            GAME_ENEMY_MIDDLE_ILLUMINATION
+            GAME_ENEMY_MIDDLE_ILLUMINATION,
+            GAME_POTION_MIDDLE_SCALE,
+            GAME_POTION_MIDDLE_VERTICAL_OFFSET,
+            GAME_POTION_MIDDLE_ILLUMINATION
         );
     }
 
@@ -505,14 +519,18 @@ class GameScene extends Phaser.Scene {
             GAME_STAIRS_NEAR_ILLUMINATION,
             GAME_ENEMY_NEAR_SCALE,
             GAME_ENEMY_NEAR_VERTICAL_OFFSET,
-            GAME_ENEMY_NEAR_ILLUMINATION
+            GAME_ENEMY_NEAR_ILLUMINATION,
+            GAME_POTION_NEAR_SCALE,
+            GAME_POTION_NEAR_VERTICAL_OFFSET,
+            GAME_POTION_NEAR_ILLUMINATION
         );
     }
 
     renderDepthLevel(depth, frontRadius, scale, darkness, verticalOffset,
         perspectiveDepth, perspectiveRadius, staircaseScale, staircaseVerticalOffset,
         staircaseIllumination,
-        enemyScale, enemyVerticalOffset, enemyIllumination) {
+        enemyScale, enemyVerticalOffset, enemyIllumination,
+        potionScale, potionVerticalOffset, potionIllumination) {
         const wallWidth = GAME_FOV_WIDTH * scale;
         const wallHeight = GAME_FOV_HEIGHT * scale;
         const centerY = GAME_FOV_HEIGHT / 2 + verticalOffset;
@@ -546,7 +564,8 @@ class GameScene extends Phaser.Scene {
             const lateral = index - frontRadius;
             this.drawStaircase(cell, lateral, wallWidth, staircaseScale,
                 staircaseVerticalOffset, staircaseIllumination);
-            this.drawPotion(cell, lateral, wallWidth, staircaseScale);
+            this.drawPotion(cell, lateral, wallWidth, potionScale,
+                potionVerticalOffset, potionIllumination);
             this.drawEnemy(cell, lateral, wallWidth, enemyScale,
                 enemyVerticalOffset, enemyIllumination);
         });
@@ -584,17 +603,18 @@ class GameScene extends Phaser.Scene {
             - GAME_COMBAT_JITTER_PIXELS;
     }
 
-    drawPotion(cell, lateral, wallWidth, scale) {
+    drawPotion(cell, lateral, wallWidth, scale, verticalOffset, illumination) {
         const potion = this.findPotionAt(cell.x, cell.y);
         if (!potion || potion.consumed) {
             return;
         }
         const image = this.add.image(
             GAME_FOV_WIDTH / GAME_CENTER_DIVISOR + lateral * wallWidth,
-            GAME_FOV_HEIGHT / GAME_CENTER_DIVISOR + GAME_POTION_VERTICAL_OFFSET,
+            GAME_FOV_HEIGHT / GAME_CENTER_DIVISOR + verticalOffset,
             GAME_POTION_TEXTURE
         );
         image.setScale(scale);
+        image.setTint(this.getIlluminationTint(illumination));
         this.fieldOfViewContainer.add(image);
     }
 

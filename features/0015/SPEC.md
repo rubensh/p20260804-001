@@ -33,6 +33,6 @@ Crear un powerup que regenere la salud del jugador.
 - Cuando dibujes la poción, ponla 30 píxeles por debajo del centro de la vista del personaje.
 - Sigue las reglas de visualización existentes para otros gráficos:
   - Sólo será visible en habitaciones cuya distancia sea menor o igual a 3.
-  - En distancia 1: la escala será 1.0 de la imagen. La posición estará desplazada (0, 30) píxeles. La iluminación será 1.0.
-  - En distancia 2: la escala será 0.5 de la imagen. La posición estará desplazada (0, 50) píxeles. La iluminación será 0.8.
+  - En distancia 1: la escala será 1.0 de la imagen. La posición estará desplazada (0, 100) píxeles. La iluminación será 1.0.
+  - En distancia 2: la escala será 0.5 de la imagen. La posición estará desplazada (0, 80) píxeles. La iluminación será 0.8.
   - En distancia 3: la escala será 0.25 de la imagen. La posición estará desplazada (0, 60) píxeles. La iluminación será 0.5.
