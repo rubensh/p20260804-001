@@ -11,8 +11,8 @@ Crear un powerup que regenere la salud del jugador.
 # Estado
 
 - [X]En proceso.
-- [ ]En pruebas.
-- [ ]Finalizado.
+- [X]En pruebas.
+- [X]Finalizado.
 
 
 # Notas
