@@ -12,6 +12,7 @@ class UITestScene extends Phaser.Scene {
     }
 
     create() {
+        playGameBackgroundMusic(this);
         this.drawTestUi();
     }
 

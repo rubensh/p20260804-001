@@ -647,6 +647,8 @@ public class GameServer
             case "ico" -> "image/x-icon";
             case "woff" -> "font/woff";
             case "woff2" -> "font/woff2";
+            case "mp4" -> "video/mp4";
+            case "wav" -> "audio/wav";
             case "txt" -> "text/plain; charset=utf-8";
             default -> "application/octet-stream";
         };

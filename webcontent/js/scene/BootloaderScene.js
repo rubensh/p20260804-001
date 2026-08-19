@@ -1,5 +1,31 @@
 'use strict';
 
+const BOOTLOADER_INTRO_VIDEO_KEY = 'BuriedDarkWorldIntro';
+const BOOTLOADER_INTRO_VIDEO_FILE = '/assets/videos/Buried-Dark-World-Intro.mp4';
+const GAME_BACKGROUND_MUSIC_KEY = 'BuriedDarkWorldLoop';
+const GAME_BACKGROUND_MUSIC_FILE = '/assets/audio/Buried-Dark-World-Loop.wav';
+const GAME_SWORD_CLASH_SOUND_KEY = 'SwordClash001';
+const GAME_SWORD_CLASH_SOUND_FILE = '/assets/audio/Sword-Clash-001.wav';
+const GAME_ENEMY_DEFEATED_SOUND_KEY = 'GoblinPain001';
+const GAME_ENEMY_DEFEATED_SOUND_FILE = '/assets/audio/Goblin-Pain-001.wav';
+
+function playGameBackgroundMusic(scene) {
+    let backgroundMusic = scene.sound.get(GAME_BACKGROUND_MUSIC_KEY);
+    if (!backgroundMusic) {
+        backgroundMusic = scene.sound.add(GAME_BACKGROUND_MUSIC_KEY, { loop: true });
+    }
+    if (!backgroundMusic.isPlaying) {
+        backgroundMusic.play();
+    }
+}
+
+function stopGameBackgroundMusic(scene) {
+    const backgroundMusic = scene.sound.get(GAME_BACKGROUND_MUSIC_KEY);
+    if (backgroundMusic && backgroundMusic.isPlaying) {
+        backgroundMusic.stop();
+    }
+}
+
 class BootloaderScene extends Phaser.Scene {
 
     constructor() {
@@ -9,11 +35,12 @@ class BootloaderScene extends Phaser.Scene {
             { key: 'SplashScreenLogo', file: '/assets/images/SplashScreenLogo.png' }
         ];
 
-        this.nextScene = 'MainMenuScene';
+        this.nextScene = 'IntroScene';
         this.transitioning = false;
     }
 
     create() {
+        stopGameBackgroundMusic(this);
         this.cameras.main.setBackgroundColor('#000000');
 
         this.drawLoadingUi();
@@ -52,6 +79,16 @@ class BootloaderScene extends Phaser.Scene {
         this.assets.forEach(asset => {
             this.load.image(asset.key, asset.file);
         });
+        this.load.video(
+            BOOTLOADER_INTRO_VIDEO_KEY,
+            BOOTLOADER_INTRO_VIDEO_FILE,
+            'loadeddata',
+            false,
+            false
+        );
+        this.load.audio(GAME_BACKGROUND_MUSIC_KEY, GAME_BACKGROUND_MUSIC_FILE);
+        this.load.audio(GAME_SWORD_CLASH_SOUND_KEY, GAME_SWORD_CLASH_SOUND_FILE);
+        this.load.audio(GAME_ENEMY_DEFEATED_SOUND_KEY, GAME_ENEMY_DEFEATED_SOUND_FILE);
         this.load.start();
     }
 

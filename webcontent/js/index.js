@@ -8,6 +8,7 @@ const game = new Phaser.Game({
     backgroundColor: '#000000',
     scene: [
         BootloaderScene,
+        IntroScene,
         MainMenuScene,
         GameScene,
         UITestScene

@@ -202,6 +202,20 @@ class GameServerTest
         assertTrue(response.headers().firstValue("Content-Type").orElse("").startsWith("image/png"));
     }
 
+    /** Comprueba los tipos MIME de los recursos multimedia de la introducción y del juego. */
+    @Test
+    void multimediaFilesUseBrowserCompatibleContentTypes() throws IOException, InterruptedException
+    {
+        Files.write(webRoot.resolve("intro.mp4"), new byte[] { 0 });
+        Files.write(webRoot.resolve("sound.wav"), new byte[] { 0 });
+
+        HttpResponse<String> videoResponse = sendGet("/intro.mp4");
+        HttpResponse<String> audioResponse = sendGet("/sound.wav");
+
+        assertEquals("video/mp4", videoResponse.headers().firstValue("Content-Type").orElse(""));
+        assertEquals("audio/wav", audioResponse.headers().firstValue("Content-Type").orElse(""));
+    }
+
     /**
      * <h2>
      * Una petición GET de un recurso inexistente devuelve 404.

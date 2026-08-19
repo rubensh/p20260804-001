@@ -5,6 +5,11 @@ const MAIN_MENU_PANEL_HEIGHT = 580;
 const MAIN_MENU_BUTTON_WIDTH = 180;
 const MAIN_MENU_BUTTON_HEIGHT = 32;
 const MAIN_MENU_BUTTON_TEXT_SIZE = 18;
+const MAIN_MENU_FULLSCREEN_BUTTON_TEXT_SIZE = 11;
+const MAIN_MENU_BUTTON_X = 10;
+const MAIN_MENU_FIRST_BUTTON_Y = 10;
+const MAIN_MENU_BUTTON_VERTICAL_GAP = 5;
+const MAIN_MENU_BUTTON_VERTICAL_STEP = MAIN_MENU_BUTTON_HEIGHT + MAIN_MENU_BUTTON_VERTICAL_GAP;
 const MAIN_MENU_FONT_NAME = 'Monospace';
 
 const MAIN_MENU_CREDITS_FONT_SIZE = 18;
@@ -48,6 +53,7 @@ class MainMenuScene extends Phaser.Scene {
     }
 
     create() {
+        playGameBackgroundMusic(this);
         this.drawMenu();
     }
 
@@ -66,8 +72,8 @@ class MainMenuScene extends Phaser.Scene {
 
         const newGameButton = this.createMenuButton({
             id: 'MenuButtonNewGame',
-            x: 10,
-            y: 10,
+            x: MAIN_MENU_BUTTON_X,
+            y: MAIN_MENU_FIRST_BUTTON_Y,
             backgroundColor: 'rgba(0.6, 0.6, 0.6, 1.0)',
             borderColor: 'rgba(0.75, 0.75, 0.75, 1.0)',
             text: 'Nuevo juego',
@@ -78,23 +84,28 @@ class MainMenuScene extends Phaser.Scene {
         });
         this.menuPanel.addElement(newGameButton);
 
-        const testUiButton = this.createMenuButton({
-            id: 'MenuButtonTestUI',
-            x: 10,
-            y: 47,
-            backgroundColor: 'rgba(0.6, 0.2, 0.2, 1.0)',
-            borderColor: 'rgba(0.75, 0.1, 0.1, 1.0)',
-            text: 'Test UI',
+        const fullscreenButton = this.createMenuButton({
+            id: 'MenuButtonFullscreen',
+            x: MAIN_MENU_BUTTON_X,
+            y: MAIN_MENU_FIRST_BUTTON_Y + MAIN_MENU_BUTTON_VERTICAL_STEP,
+            backgroundColor: 'rgba(0.6, 0.6, 0.6, 1.0)',
+            borderColor: 'rgba(0.75, 0.75, 0.75, 1.0)',
+            text: 'Alternar pantalla completa',
+            textSize: MAIN_MENU_FULLSCREEN_BUTTON_TEXT_SIZE,
             onClickFunction: () => {
-                this.scene.start('UITestScene');
+                if (this.scale.isFullscreen) {
+                    this.scale.stopFullscreen();
+                } else {
+                    this.scale.startFullscreen();
+                }
             }
         });
-        this.menuPanel.addElement(testUiButton);
+        this.menuPanel.addElement(fullscreenButton);
 
         const creditsButton = this.createMenuButton({
             id: 'MenuButtonCredits',
-            x: 10,
-            y: 79,
+            x: MAIN_MENU_BUTTON_X,
+            y: MAIN_MENU_FIRST_BUTTON_Y + (MAIN_MENU_BUTTON_VERTICAL_STEP * 2),
             backgroundColor: 'rgba(0.6, 0.6, 0.6, 1.0)',
             borderColor: 'rgba(0.75, 0.75, 0.75, 1.0)',
             text: 'Créditos',
@@ -103,19 +114,6 @@ class MainMenuScene extends Phaser.Scene {
             }
         });
         this.menuPanel.addElement(creditsButton);
-
-        const exitButton = this.createMenuButton({
-            id: 'MenuButtonExit',
-            x: 10,
-            y: 116,
-            backgroundColor: 'rgba(0.8, 0.1, 0.1, 1.0)',
-            borderColor: 'rgba(0.95, 0.05, 0.05, 1.0)',
-            text: 'Salir del juego',
-            onClickFunction: () => {
-                this.game.destroy(true);
-            }
-        });
-        this.menuPanel.addElement(exitButton);
     }
 
     createMenuButton(options) {
@@ -129,7 +127,7 @@ class MainMenuScene extends Phaser.Scene {
             borderColor: options.borderColor,
             textColor: 'rgba(0.0, 0.0, 0.0, 1.0)',
             text: options.text,
-            textSize: MAIN_MENU_BUTTON_TEXT_SIZE,
+            textSize: options.textSize || MAIN_MENU_BUTTON_TEXT_SIZE,
             fontName: MAIN_MENU_FONT_NAME,
             enabled: true,
             visible: true,

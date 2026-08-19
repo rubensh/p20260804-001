@@ -180,6 +180,7 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
+        playGameBackgroundMusic(this);
         this.cameras.main.setBackgroundColor('#000000');
         this.maze = new Maze();
         this.maze.generateMaze(GAME_ENEMY_COUNT);
@@ -401,6 +402,10 @@ class GameScene extends Phaser.Scene {
         }
 
         const damage = this.player.attack(enemyAhead);
+        this.sound.play(GAME_SWORD_CLASH_SOUND_KEY);
+        if (enemyAhead.isDead()) {
+            this.sound.play(GAME_ENEMY_DEFEATED_SOUND_KEY);
+        }
         const attackPrefix = this.isBoss(enemyAhead)
             ? GAME_LOG_PLAYER_BOSS_ATTACK_PREFIX
             : GAME_LOG_PLAYER_ATTACK_PREFIX;
@@ -417,6 +422,7 @@ class GameScene extends Phaser.Scene {
         }
 
         const damage = enemy.attack(this.player);
+        this.sound.play(GAME_SWORD_CLASH_SOUND_KEY);
         const attackPrefix = this.isBoss(enemy)
             ? GAME_LOG_BOSS_ATTACK_PREFIX
             : GAME_LOG_ENEMY_ATTACK_PREFIX;

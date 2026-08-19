@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -191,12 +192,14 @@ class MainMenuSceneTest
 
         assertTrue(scene.contains("MenuButtonNewGame"), "Falta el botón de nuevo juego");
         assertTrue(scene.contains("Nuevo juego"), "Falta el texto de nuevo juego");
-        assertTrue(scene.contains("MenuButtonTestUI"), "Falta el botón de prueba de UI");
-        assertTrue(scene.contains("Test UI"), "Falta el texto de prueba de UI");
+        assertTrue(scene.contains("MenuButtonFullscreen"), "Falta el botón de pantalla completa");
+        assertTrue(scene.contains("Alternar pantalla completa"), "Falta el texto de pantalla completa");
         assertTrue(scene.contains("MenuButtonCredits"), "Falta el botón de créditos");
         assertTrue(scene.contains("Créditos"), "Falta el texto de créditos");
-        assertTrue(scene.contains("MenuButtonExit"), "Falta el botón de salida");
-        assertTrue(scene.contains("Salir del juego"), "Falta el texto de salida del juego");
+        assertFalse(scene.contains("MenuButtonTestUI"), "El botón de prueba de UI no se ha eliminado");
+        assertFalse(scene.contains("Test UI"), "El texto de prueba de UI no se ha eliminado");
+        assertFalse(scene.contains("MenuButtonExit"), "El botón de salida no se ha eliminado");
+        assertFalse(scene.contains("Salir del juego"), "El texto de salida no se ha eliminado");
         assertTrue(scene.contains("Monospace"), "Los botones no usan fuente Monospace");
     }
 
@@ -223,7 +226,7 @@ class MainMenuSceneTest
     {
         String scene = Files.readString(MAIN_MENU_JS);
         int newGameStart = scene.indexOf("id: 'MenuButtonNewGame'");
-        int nextButtonStart = scene.indexOf("id: 'MenuButtonTestUI'");
+        int nextButtonStart = scene.indexOf("id: 'MenuButtonFullscreen'");
 
         assertTrue(newGameStart >= 0, "Falta el botón de nuevo juego");
         assertTrue(nextButtonStart > newGameStart, "No se puede delimitar el botón de nuevo juego");
@@ -237,7 +240,7 @@ class MainMenuSceneTest
 
     /**
      * <h2>
-     * El botón de prueba de UI da paso a la escena UITestScene.
+     * El botón de pantalla completa alterna entre ambos modos.
      * </h2>
      *
      * @throws IOException
@@ -254,16 +257,18 @@ class MainMenuSceneTest
      *  0.0.1
      */
     @Test
-    void mainMenuTestUiButtonStartsUiTestScene() throws IOException
+    void mainMenuFullscreenButtonTogglesFullscreenMode() throws IOException
     {
         String scene = Files.readString(MAIN_MENU_JS);
 
-        assertTrue(scene.contains("scene.start('UITestScene')"), "El botón de prueba de UI no da paso a UITestScene");
+        assertTrue(scene.contains("this.scale.isFullscreen"), "No se consulta el estado de pantalla completa");
+        assertTrue(scene.contains("this.scale.startFullscreen()"), "No se activa la pantalla completa");
+        assertTrue(scene.contains("this.scale.stopFullscreen()"), "No se desactiva la pantalla completa");
     }
 
     /**
      * <h2>
-     * El botón de salida finaliza el juego.
+     * Las opciones de prueba de UI y salida ya no están disponibles.
      * </h2>
      *
      * @throws IOException
@@ -280,16 +285,17 @@ class MainMenuSceneTest
      *  0.0.1
      */
     @Test
-    void mainMenuExitButtonDestroysGame() throws IOException
+    void mainMenuDoesNotExposeTestOrExitActions() throws IOException
     {
         String scene = Files.readString(MAIN_MENU_JS);
 
-        assertTrue(scene.contains("game.destroy"), "El botón de salida no finaliza el juego");
+        assertFalse(scene.contains("scene.start('UITestScene')"), "El menú todavía abre UITestScene");
+        assertFalse(scene.contains("game.destroy"), "El menú todavía finaliza el juego");
     }
 
     /**
      * <h2>
-     * La escena de arranque apunta al menú principal.
+     * La escena de arranque apunta a la introducción.
      * </h2>
      *
      * @throws IOException
@@ -306,17 +312,17 @@ class MainMenuSceneTest
      *  0.0.1
      */
     @Test
-    void bootloaderTargetsMainMenuScene() throws IOException
+    void bootloaderTargetsIntroScene() throws IOException
     {
         String scene = Files.readString(BOOTLOADER_JS);
 
         assertTrue(scene.contains("nextScene"), "Falta la variable de la siguiente escena");
-        assertTrue(scene.contains("'MainMenuScene'"), "La escena de arranque no apunta a MainMenuScene");
+        assertTrue(scene.contains("'IntroScene'"), "La escena de arranque no apunta a IntroScene");
     }
 
     /**
      * <h2>
-     * La configuración del juego registra el menú principal en segunda posición.
+     * La configuración registra la introducción entre el arranque y el menú principal.
      * </h2>
      *
      * @throws IOException
@@ -333,17 +339,20 @@ class MainMenuSceneTest
      *  0.0.1
      */
     @Test
-    void indexJsRegistersMainMenuSecond() throws IOException
+    void indexJsRegistersIntroBeforeMainMenu() throws IOException
     {
         String js = Files.readString(INDEX_JS);
 
         assertTrue(js.contains("BootloaderScene"), "La escena de arranque no está en la configuración");
+        assertTrue(js.contains("IntroScene"), "La escena de introducción no está en la configuración");
         assertTrue(js.contains("MainMenuScene"), "La escena del menú principal no está en la configuración");
         assertTrue(js.contains("UITestScene"), "La escena de prueba de UI no está en la configuración");
-        assertTrue(js.indexOf("MainMenuScene") > js.indexOf("BootloaderScene"),
-                "La escena del menú principal no está tras la de arranque");
+        assertTrue(js.indexOf("IntroScene") > js.indexOf("BootloaderScene"),
+                "La escena de introducción no está tras la de arranque");
+        assertTrue(js.indexOf("MainMenuScene") > js.indexOf("IntroScene"),
+                "La escena del menú principal no está tras la introducción");
         assertTrue(js.indexOf("UITestScene") > js.indexOf("MainMenuScene"),
-                "La escena del menú principal no está en segunda posición");
+                "UITestScene no está tras el menú principal");
     }
 
     /**
@@ -370,16 +379,19 @@ class MainMenuSceneTest
         String html = Files.readString(INDEX_HTML);
 
         int bootloaderIndex = html.indexOf("../js/scene/BootloaderScene.js");
+        int introIndex = html.indexOf("../js/scene/IntroScene.js");
         int mainMenuIndex = html.indexOf("../js/scene/MainMenuScene.js");
         int uiTestSceneIndex = html.indexOf("../js/scene/UITestScene.js");
         int indexJsIndex = html.indexOf("../js/index.js");
 
         assertTrue(bootloaderIndex >= 0, "El HTML no carga la escena de arranque");
+        assertTrue(introIndex >= 0, "El HTML no carga la escena de introducción");
         assertTrue(mainMenuIndex >= 0, "El HTML no carga la escena del menú principal");
         assertTrue(uiTestSceneIndex >= 0, "El HTML no carga la escena de prueba de UI");
         assertTrue(indexJsIndex >= 0, "El HTML no carga el script principal");
         assertTrue(mainMenuIndex < indexJsIndex, "MainMenuScene.js debe cargarse antes que index.js");
-        assertTrue(bootloaderIndex < mainMenuIndex, "BootloaderScene.js debe cargarse antes que MainMenuScene.js");
+        assertTrue(bootloaderIndex < introIndex, "BootloaderScene.js debe cargarse antes que IntroScene.js");
+        assertTrue(introIndex < mainMenuIndex, "IntroScene.js debe cargarse antes que MainMenuScene.js");
         assertTrue(mainMenuIndex < uiTestSceneIndex, "MainMenuScene.js debe cargarse antes que UITestScene.js");
     }
 
