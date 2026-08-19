@@ -12,6 +12,8 @@ const GAME_ENEMY_COUNT = 200;
 const GAME_ENEMY_ALIVE_HEALTH_THRESHOLD = 0;
 const GAME_ENEMY_ADJACENT_DISTANCE = 1;
 const GAME_ENEMY_TEXTURE_PREFIX = 'Goblin-00';
+const GAME_POTION_TEXTURE = 'Potion001';
+const GAME_POTION_VERTICAL_OFFSET = 30;
 const GAME_ATTACK_DELAY_MILLISECONDS = 1000;
 const GAME_COMBAT_JITTER_PIXELS = 5;
 const GAME_COMBAT_JITTER_RANGE = GAME_COMBAT_JITTER_PIXELS * 2 + 1;
@@ -138,7 +140,8 @@ const GAME_ASSETS = [
     { key: 'Stairs-Down', file: '/assets/images/Stairs-Down.png' },
     { key: 'Goblin-001', file: '/assets/images/Goblin-001.png' },
     { key: 'Goblin-002', file: '/assets/images/Goblin-002.png' },
-    { key: 'Goblin-003', file: '/assets/images/Goblin-003.png' }
+    { key: 'Goblin-003', file: '/assets/images/Goblin-003.png' },
+    { key: GAME_POTION_TEXTURE, file: '/assets/images/Potion001.png' }
 ];
 
 class GameScene extends Phaser.Scene {
@@ -158,6 +161,7 @@ class GameScene extends Phaser.Scene {
         this.maze = new Maze();
         this.maze.generateMaze(GAME_ENEMY_COUNT);
         this.enemies = this.maze.enemies;
+        this.potions = this.maze.potions;
         this.gameOver = false;
         this.combatMessages = [];
         this.playerAttackTargetId = null;
@@ -257,6 +261,7 @@ class GameScene extends Phaser.Scene {
             return;
         }
         action();
+        this.consumePotionAtPlayerPosition();
         this.resolveCombat();
         this.refreshView();
         if (this.player.health <= GAME_OVER_HEALTH_THRESHOLD) {
@@ -408,6 +413,20 @@ class GameScene extends Phaser.Scene {
             && enemy.y === y);
     }
 
+    findPotionAt(x, y) {
+        return this.potions.find(potion => potion.level === this.player.level
+            && potion.x === x && potion.y === y);
+    }
+
+    consumePotionAtPlayerPosition() {
+        const potion = this.findPotionAt(this.player.x, this.player.y);
+        if (!potion || !potion.consume(this.player)) {
+            return;
+        }
+        this.potions = this.potions.filter(currentPotion => currentPotion !== potion);
+        this.maze.potions = this.potions;
+    }
+
     refreshView() {
         this.markVisibleFieldOfView();
         this.renderFieldOfView();
@@ -527,6 +546,7 @@ class GameScene extends Phaser.Scene {
             const lateral = index - frontRadius;
             this.drawStaircase(cell, lateral, wallWidth, staircaseScale,
                 staircaseVerticalOffset, staircaseIllumination);
+            this.drawPotion(cell, lateral, wallWidth, staircaseScale);
             this.drawEnemy(cell, lateral, wallWidth, enemyScale,
                 enemyVerticalOffset, enemyIllumination);
         });
@@ -562,6 +582,20 @@ class GameScene extends Phaser.Scene {
         }
         return Math.floor(Math.random() * GAME_COMBAT_JITTER_RANGE)
             - GAME_COMBAT_JITTER_PIXELS;
+    }
+
+    drawPotion(cell, lateral, wallWidth, scale) {
+        const potion = this.findPotionAt(cell.x, cell.y);
+        if (!potion || potion.consumed) {
+            return;
+        }
+        const image = this.add.image(
+            GAME_FOV_WIDTH / GAME_CENTER_DIVISOR + lateral * wallWidth,
+            GAME_FOV_HEIGHT / GAME_CENTER_DIVISOR + GAME_POTION_VERTICAL_OFFSET,
+            GAME_POTION_TEXTURE
+        );
+        image.setScale(scale);
+        this.fieldOfViewContainer.add(image);
     }
 
     drawStaircase(cell, lateral, wallWidth, staircaseScale, verticalOffset, illumination) {

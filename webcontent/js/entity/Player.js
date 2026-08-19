@@ -10,6 +10,7 @@ class Player extends Entity {
         this.maze = maze;
         this.facing = facing;
         this.health = health;
+        this.maxHealth = health;
         this.minDamage = minDamage;
         this.maxDamage = maxDamage;
         this.minDefense = minDefense;
@@ -30,6 +31,10 @@ class Player extends Entity {
         if (difference > 0) {
             this.health = Math.max(0, this.health - difference);
         }
+    }
+
+    restoreHealth() {
+        this.health = this.maxHealth;
     }
 
     moveForward() {

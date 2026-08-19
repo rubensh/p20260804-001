@@ -110,3 +110,10 @@ Nombre: feature-0014
 Descripción: Dinámica de combates.
 Etiquetas: [phaser 3]
 ````
+
+````text
+Feature ID: 0015
+Nombre: feature-0015
+Descripción: Creación de powerups.
+Etiquetas: [phaser 3]
+````

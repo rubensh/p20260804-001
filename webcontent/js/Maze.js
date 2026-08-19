@@ -19,6 +19,9 @@ const MAZE_ENEMY_WEIGHT_EXPONENT = 2;
 const MAZE_ENEMY_ID_OFFSET = 1;
 const MAZE_ENEMY_ID_PREFIX = 'Enemy';
 const MAZE_NO_ENEMIES = 0;
+const MAZE_POTIONS_PER_LEVEL = 5;
+const MAZE_POTION_ID_OFFSET = 1;
+const MAZE_POTION_ID_PREFIX = 'Potion';
 
 const MAZE_VISION_VISIBLE = 1;
 const MAZE_VISION_RADIUS = 2;
@@ -71,10 +74,12 @@ class Maze {
         this.visibility = [];
         this.enemies = [];
         this.enemyCountsByLevel = [];
+        this.potions = [];
     }
 
     generateMaze(enemyCount = MAZE_NO_ENEMIES) {
         this.enemies = [];
+        this.potions = [];
         this.enemyCountsByLevel = this.calculateEnemyCounts(enemyCount);
         for (let currentLevel = MAZE_FIRST_LEVEL; currentLevel < this.depth; currentLevel++) {
             const level = currentLevel;
@@ -155,6 +160,7 @@ class Maze {
             currentLevel,
             this.enemyCountsByLevel[currentLevel]
         );
+        this.generatePotionsForLevel(matrix, currentLevel);
 
         return matrix;
     }
@@ -203,6 +209,36 @@ class Maze {
             const id = MAZE_ENEMY_ID_PREFIX + (this.enemies.length + MAZE_ENEMY_ID_OFFSET);
             this.enemies.push(new Enemy(id, position.x, position.y, currentLevel, this));
         }
+    }
+
+    generatePotionsForLevel(matrix, currentLevel) {
+        const candidates = [];
+        for (let y = MAZE_LEVEL_NUMBER_OFFSET;
+            y < matrix.length - MAZE_LEVEL_NUMBER_OFFSET;
+            y++) {
+            for (let x = MAZE_LEVEL_NUMBER_OFFSET;
+                x < matrix[y].length - MAZE_LEVEL_NUMBER_OFFSET;
+                x++) {
+                if (matrix[y][x] === MAZE_ROOM_EMPTY
+                    && !this.isInitialPlayerPosition(currentLevel, x, y)
+                    && !this.isOccupiedByEnemy(currentLevel, x, y)) {
+                    candidates.push({ x, y });
+                }
+            }
+        }
+
+        const potionsToCreate = Math.min(MAZE_POTIONS_PER_LEVEL, candidates.length);
+        for (let potionIndex = 0; potionIndex < potionsToCreate; potionIndex++) {
+            const candidateIndex = Math.floor(Math.random() * candidates.length);
+            const position = candidates.splice(candidateIndex, MAZE_LEVEL_NUMBER_OFFSET)[0];
+            const id = MAZE_POTION_ID_PREFIX + (this.potions.length + MAZE_POTION_ID_OFFSET);
+            this.potions.push(new Potion(id, position.x, position.y, currentLevel));
+        }
+    }
+
+    isOccupiedByEnemy(currentLevel, x, y) {
+        return this.enemies.some(enemy => enemy.level === currentLevel
+            && enemy.x === x && enemy.y === y);
     }
 
     isInitialPlayerPosition(currentLevel, x, y) {
