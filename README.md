@@ -151,23 +151,37 @@ Cada especificación se añadirá, de manera resumida, al listado existente en *
 
 ## 7.  Ejecución
 
-{TBD}
-
 ### 7.1. Cómo ejecutar el proyecto
 
-{TBD}
+El proyecto está autocontenido para ser portable. Desde un terminal Linux o consola Windows, accedemos a la carpeta.
+
+Para ejecutarlo desde sistemas Linux, se puede ejecutar:
+
+````bash
+$ ./run.sh
+````
+
+Desde sistemas Windows se ejecuta a través de:
+
+````bash
+run.bat
+````
+
+Esto arranca el miniservidor HTTP incluído en el juego, que escuchará por el puerto 8088 por defecto. Una vez arrancado, desde un navegador, accederemos a la siguiente URL:
+
+http://localhost:8088/pages/index.html
 
 
 ### 7.2. Cómo ejecutar los tests
 
-{TBD}
+Los tests automatizados dependen del entorno de Maven.
 
+Para ejecutarlos, desde la carpeta del proyecto, ejecutamos:
 
-## 8. FAQ
+````code
+$ mvn verify
+````
 
-{TBD}
+## 8. Licencia
 
-
-## 9. Licencia
-
-{TBD}
+PolyForm Noncommercial 1.0.0 para uso personal y no comercial.

@@ -80,7 +80,7 @@ Etiquetas: [phaser 3][entities]
 Feature ID: 0010
 Nombre: feature-0010
 Descripción: Puesta en marcha de juego + Mapa + Jugador.
-Etiquetas: [phaser 3][frontend][assets][images][v1.0.0]
+Etiquetas: [phaser 3][frontend][assets][images]
 ````
 
 ````text
@@ -130,4 +130,11 @@ Feature ID: 0017
 Nombre: feature-0017
 Descripción: Cambios finales.
 Etiquetas: [frontend][html][css][js][phaser 3]
+````
+
+````text
+Feature ID: 0018
+Nombre: feature-0018
+Descripción: Portabilidad. Bundle de librerías Java.
+Etiquetas: [backend][java]
 ````
