@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Verifica la carga, presentación y transición del vídeo de introducción. */
 class IntroSceneTest
 {
+    private static final String INTRO_VIDEO_CANVAS_SCALE = "0.2";
+
     private static final Path INTRO_SCENE_JS = Path.of("webcontent/js/scene/IntroScene.js");
     private static final Path BOOTLOADER_JS = Path.of("webcontent/js/scene/BootloaderScene.js");
     private static final Path INDEX_JS = Path.of("webcontent/js/index.js");
@@ -37,12 +39,14 @@ class IntroSceneTest
     }
 
     @Test
-    void introFitsVideoToCanvasDimensions() throws IOException
+    void introFitsVideoToTwentyPercentOfCanvasDimensions() throws IOException
     {
         String scene = Files.readString(INTRO_SCENE_JS);
+        String expectedSize = "setDisplaySize(this.scale.width * " + INTRO_VIDEO_CANVAS_SCALE
+                + ", this.scale.height * " + INTRO_VIDEO_CANVAS_SCALE + ")";
 
-        assertTrue(scene.contains("setDisplaySize(this.scale.width, this.scale.height)"),
-                "IntroScene no ajusta el vídeo a las dimensiones del canvas");
+        assertTrue(scene.contains(expectedSize),
+                "IntroScene no ajusta el vídeo al 20% de las dimensiones del canvas");
         assertTrue(scene.contains("Phaser.GameObjects.Events.VIDEO_PLAYING"),
                 "IntroScene no reaplica el tamaño después de inicializar el vídeo");
     }

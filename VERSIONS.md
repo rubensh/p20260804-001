@@ -1,6 +1,6 @@
 # Versión actual
 
-p20260804-001:0.0.1
+p20260804-001:1.0.0
 
 ---
 
@@ -9,3 +9,4 @@ p20260804-001:0.0.1
 
 
 - 0.0.1: arranque del proyecto.
+- 1.0.0: versión con 5 niveles, enemigos, items, vídeo, sonido y texto legal.

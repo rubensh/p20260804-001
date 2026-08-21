@@ -4,7 +4,7 @@
 - Se comprueba que el menú principal elimina las opciones `Test UI` y `Salir del juego`.
 - Se comprueba que `Alternar pantalla completa` activa y desactiva el modo de pantalla completa.
 - Se comprueba que `BootloaderScene` carga `Buried-Dark-World-Intro.mp4` y da paso a `IntroScene`.
-- Se comprueba que `IntroScene` ajusta el vídeo al 100% del canvas, también después de que Phaser inicialice sus dimensiones, y abre `MainMenuScene` a los 10 segundos.
+- Se comprueba que `IntroScene` ajusta el vídeo al 20% del ancho y del alto del canvas, también después de que Phaser inicialice sus dimensiones, y abre `MainMenuScene` a los 10 segundos.
 - Se comprueba que el vídeo de introducción mantiene su audio habilitado.
 - Se comprueba que la introducción se puede omitir con cualquier clic o pulsación de teclado.
 - Se comprueba que `IntroScene` queda registrada entre `BootloaderScene` y `MainMenuScene`.

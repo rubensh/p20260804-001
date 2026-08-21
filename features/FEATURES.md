@@ -138,3 +138,10 @@ Nombre: feature-0018
 Descripción: Portabilidad. Bundle de librerías Java.
 Etiquetas: [backend][java]
 ````
+
+````text
+Feature ID: 0019
+Nombre: feature-0019
+Descripción: Licencia.
+Etiquetas: [legal][v1.0.0]
+````

@@ -184,4 +184,9 @@ $ mvn verify
 
 ## 8. Licencia
 
-PolyForm Noncommercial 1.0.0 para uso personal y no comercial.
+El código y los contenidos propios de **Buried Dark World** se distribuyen bajo PolyForm Noncommercial 1.0.0 para uso personal y no comercial:
+
+- [Licencia en español](LICENSE-ES.md).
+- [License in English](LICENSE-EN.md).
+
+Los componentes de terceros quedan excluidos de esta licencia y conservan sus condiciones originales, tal como se detalla en ambos documentos.
