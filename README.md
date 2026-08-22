@@ -2,13 +2,17 @@
 
 "Buried Dark World"
 
+## Presentación YouTube
+https://youtu.be/Meq4KlVFZ90
+
+## Repositorio GitHub
 https://github.com/rubensh/p20260804-001.git
 
 ----
 
 ## 1. ¿Qué es este proyecto?
 
-**p20260804-001** es el nómbre en código del proyecto de desarrollo de un videojuego *"roguelike"* de mazmorras para navegador web, donde el jugador deberá encontrar una salida del laberinto, mientras diferentes enemigos intentan impedírselo. El juego se presenta en primera persona con un falso 3D.
+**p20260804-001** es el nombre en código del proyecto de desarrollo de un videojuego *"roguelike"* de mazmorras para navegador web, donde el jugador deberá encontrar una salida del laberinto, mientras diferentes enemigos intentan impedírselo. El juego se presenta en primera persona con un falso 3D.
 
 
 ## 2. Objetivos
@@ -36,8 +40,9 @@ Qué no incluye:
 - Compras en la aplicación.
 
 
-## 3. Requisitos
+## 3. Requisitos de desarrollo.
 
+- SO Unix/Linux.
 - Java JDK 21+.
 - Maven 3.x.
 - Git 2.x.
@@ -151,20 +156,18 @@ Cada especificación se añadirá, de manera resumida, al listado existente en *
 
 ## 7.  Ejecución
 
-### 7.1. Cómo ejecutar el proyecto
+### 7.1. Requerimientos
 
-El proyecto está autocontenido para ser portable. Desde un terminal Linux o consola Windows, accedemos a la carpeta.
+- Sistema operativo Unix/Linux.
+- Navegador web moderno (Firefox, Chrome, Edge, Opera, Brave).
 
-Para ejecutarlo desde sistemas Linux, se puede ejecutar:
+
+### 7.2. Cómo ejecutar el proyecto
+
+El proyecto está autocontenido para ser portable. Desde un terminal Linux, accedemos a la carpeta del proyecto y ejecutamos:
 
 ````bash
 $ ./run.sh
-````
-
-Desde sistemas Windows se ejecuta a través de:
-
-````bash
-run.bat
 ````
 
 Esto arranca el miniservidor HTTP incluído en el juego, que escuchará por el puerto 8088 por defecto. Una vez arrancado, desde un navegador, accederemos a la siguiente URL:
@@ -172,7 +175,7 @@ Esto arranca el miniservidor HTTP incluído en el juego, que escuchará por el p
 http://localhost:8088/pages/index.html
 
 
-### 7.2. Cómo ejecutar los tests
+### 7.3. Cómo ejecutar los tests
 
 Los tests automatizados dependen del entorno de Maven.
 
